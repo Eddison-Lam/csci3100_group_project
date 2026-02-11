@@ -8,7 +8,7 @@ vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
 
-* text=auto
+* text=auto eol=lf
 *.rb text eol=lf
 *.yml text eol=lf
 Dockerfile text eol=lf
