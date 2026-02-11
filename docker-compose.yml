@@ -1,23 +1,30 @@
 services:
   db:
-    image: mysql:latest
-    volumes:
-      - ./mysql_data:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: 114514
-      MYSQL_DATABASE: app_db
+    image: mysql:8.0 
+    restart: always
     ports:
-      - "3307:3306"
+      - "127.0.0.1:${EXTERNAL_DB_PORT:-3306}:3306" 
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
 
   web:
     build: .
     volumes:
       - .:/app
     working_dir: /app
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PASSWORD: ${DB_PASSWORD}
     depends_on:
       - db
     ports:
-      - "3000:3000" 
+      - "${EXTERNAL_WEB_PORT:-3000}:3000" 
     command: bundle exec rails s -p 3000 -b '0.0.0.0'
     stdin_open: true
     tty: true
+
+volumes:
+  mysql_data:
