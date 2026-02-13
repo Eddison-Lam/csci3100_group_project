@@ -1,0 +1,10 @@
+<h1>Pages#home</h1>
+<p>Hello World!</p>
+
+<% if user_signed_in? %>
+  <p>目前登入者：<%= current_user.email %></p>
+  <%= button_to "Login", destroy_user_session_path, method: :delete %>
+<% else %>
+  <%= link_to "Click to Reister", new_user_registration_path %> |
+  <%= link_to "Click to Login", new_user_session_path %>
+<% end %>

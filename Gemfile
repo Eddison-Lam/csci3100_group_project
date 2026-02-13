@@ -6,6 +6,9 @@ gem "rails", "~> 8.1.2"
 gem "propshaft"
 # Use mysql as the database for Active Record
 gem "mysql2", "~> 0.5"
+# redis for session storage, cache
+gem "redis"
+gem "redis-session-store"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -65,4 +68,8 @@ group :test do
   gem "selenium-webdriver"
 end
 
+gem "dotenv-rails"
 gem "jsbundling-rails", "~> 1.3"
+
+# Authentication solution for Rails [https://github.com/heartcombo/devise]
+gem "devise"
