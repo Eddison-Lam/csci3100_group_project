@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  type: 
+  name: MyString
+  department: one
+  booking_limit: 1
+  price_per_unit: 9.99
+  is_active: false
+
+two:
+  type: 
+  name: MyString
+  department: two
+  booking_limit: 1
+  price_per_unit: 9.99
+  is_active: false

@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  resource: one
+  booking_date: 2026-02-27
+  start_slot: 1
+  end_slot: 1
+  status: 1
+
+two:
+  user: two
+  resource: two
+  booking_date: 2026-02-27
+  start_slot: 1
+  end_slot: 1
+  status: 1

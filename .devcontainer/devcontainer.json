@@ -12,5 +12,5 @@
       ]
     }
   },
-  "postCreateCommand": "bundle install && bin/rails db:prepare"
+  "postCreateCommand": "bundle install"
 }

@@ -10,16 +10,69 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_12_133612) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_27_093550) do
+  create_table "bookings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.date "booking_date"
+    t.datetime "created_at", null: false
+    t.integer "end_slot"
+    t.bigint "resource_id", null: false
+    t.integer "start_slot"
+    t.integer "status"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["booking_date"], name: "index_bookings_on_booking_date"
+    t.index ["resource_id"], name: "index_bookings_on_resource_id"
+    t.index ["user_id"], name: "index_bookings_on_user_id"
+  end
+
+  create_table "departments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_departments_on_code"
+  end
+
+  create_table "resources", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.integer "booking_limit"
+    t.datetime "created_at", null: false
+    t.bigint "department_id", null: false
+    t.boolean "is_active"
+    t.string "name"
+    t.decimal "price_per_unit", precision: 10
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["department_id"], name: "index_resources_on_department_id"
+    t.index ["type"], name: "index_resources_on_type"
+  end
+
+  create_table "settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.string "value"
+    t.string "value_type", default: "string"
+    t.index ["key"], name: "index_settings_on_key", unique: true
+  end
+
   create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "department_id"
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.index ["department_id"], name: "index_users_on_department_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
+
+  add_foreign_key "bookings", "resources"
+  add_foreign_key "bookings", "users"
+  add_foreign_key "resources", "departments"
+  add_foreign_key "users", "departments"
 end
