@@ -6,13 +6,10 @@ class CreateBookings < ActiveRecord::Migration[8.1]
       t.date    :booking_date, null: false
       t.integer :start_slot, null: false
       t.integer :end_slot, null: false
-      t.integer :status, default: 0, null: false    # enum: pending, confirmed, rejected, (canceled?)
+      t.integer :status, default: 0, null: false    # enum: confirmed, canceled?, no-show
 
       t.string   :purpose
       t.text     :notes
-      t.text     :rejection_reason
-      t.datetime :responded_at
-      t.references :approved_by, foreign_key: { to_table: :users, on_delete: :nullify }, null: true
 
       t.timestamps
     end
