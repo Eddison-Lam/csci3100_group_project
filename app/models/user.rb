@@ -10,7 +10,12 @@ class User < ApplicationRecord
 
   validates :email, presence: true
   validate :validate_cuhk_email_domain
-  validates :department, presence: true, if: :admin?
+  # Changed from `if: :admin?` to also require `persisted?`.
+  # Without this, Devise registration for @cuhk.edu.hk emails would crash
+  # because assign_role_from_email auto-sets role to :admin, but Devise
+  # sign-up has no department field. Now admins can register first and
+  # get a department assigned later by a superadmin.
+  validates :department, presence: true, if: -> { admin? && persisted? }
 
   before_validation :assign_role_from_email, on: :create
 
