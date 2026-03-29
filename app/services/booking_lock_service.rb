@@ -143,8 +143,10 @@ class BookingLockService
 
     private
 
+    # Switched from Redis.new(...) to the shared REDIS constant from
+    # config/initializers/redis.rb so both services use the same connection.
     def redis
-      @redis ||= Redis.new(url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0"))
+      REDIS
     end
 
     def lock_key(token)

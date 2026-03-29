@@ -1,5 +1,7 @@
 class Booking < ApplicationRecord
-  enum status: { confirmed: 0, cancelled: 1, no_show: 2 }
+  # Updated from old Hash syntax `enum status: {...}` which was removed in Rails 8.1.
+  # The User model already used the new syntax, this one was missed.
+  enum :status, { confirmed: 0, cancelled: 1, no_show: 2 }
 
   belongs_to :resource
   belongs_to :user
@@ -34,7 +36,33 @@ class Booking < ApplicationRecord
   #   update!(status: :cancelled)
   # end
 
+  # These three methods were below `private` before, which meant services
+  # and controllers couldn't call them. Moved them up here so they're public.
+
+  # 新增：job 成功後轉 confirmed
+  def confirm!
+    update!(status: :confirmed)
+  end
+
+  # 新增：更新 Redis bitmap（成功 insert 後 call）
+  def update_occupied_bitmap
+    ResourceAvailabilityService.update_occupied_bitmap(resource_id, booking_date, (start_slot...end_slot).to_a)
+  end
+
+  # 新增：清除 pending bitmap（job 完成或失敗時 call）
+  def clear_pending_bitmap
+    ResourceAvailabilityService.clear_pending_bitmap(resource_id, booking_date, (start_slot...end_slot).to_a)
+  end
+
   private
+
+  # Added this because the before_validation callback was crashing.
+  # It just sets the default status to confirmed if it isn't set yet.
+  # The original code had `before_validation :auto_confirm` but never
+  # defined the method, so every Booking.create raised NoMethodError.
+  def auto_confirm
+    self.status ||= :confirmed
+  end
 
   def end_after_start
     return unless start_slot && end_slot
@@ -80,20 +108,5 @@ class Booking < ApplicationRecord
                      .where(status: :confirmed)
                      .where("start_slot < ? AND end_slot > ?", end_slot, start_slot)
     errors.add(:base, "Time slot conflicts with existing booking") if overlap.exists?
-  end
-
-  # 新增：job 成功後轉 confirmed
-  def confirm!
-    update!(status: :confirmed)
-  end
-
-  # 新增：更新 Redis bitmap（成功 insert 後 call）
-  def update_occupied_bitmap
-    ResourceAvailabilityService.update_occupied_bitmap(resource_id, booking_date, (start_slot...end_slot).to_a)
-  end
-
-  # 新增：清除 pending bitmap（job 完成或失敗時 call）
-  def clear_pending_bitmap
-    ResourceAvailabilityService.clear_pending_bitmap(resource_id, booking_date, (start_slot...end_slot).to_a)
   end
 end

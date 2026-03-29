@@ -7,6 +7,24 @@ class ResourceAvailabilityService
   # TTL constants (in seconds)
   OCCUPIED_TTL = 86_400  # 24 hours
   PENDING_TTL  = 3600    # 1 hour
+
+  # --- Class-level wrappers ---
+  # Booking model calls these as class methods, e.g.:
+  #   ResourceAvailabilityService.update_occupied_bitmap(resource_id, date, slots)
+  # But the actual bitmap logic lives on instances. These wrappers bridge the gap
+  # so we don't have to change every call site in the Booking model.
+  def self.update_occupied_bitmap(resource_id, date, slots)
+    resource = Resource.find(resource_id)
+    service  = new(resource)
+    service.set_occupied_slots(date, slots.min, slots.max + 1)
+  end
+
+  def self.clear_pending_bitmap(resource_id, date, slots)
+    resource = Resource.find(resource_id)
+    service  = new(resource)
+    service.clear_pending_slots(date, slots.min, slots.max + 1)
+  end
+
   def initialize(resource)
     @resource = resource
   end
@@ -69,6 +87,35 @@ class ResourceAvailabilityService
     results
   end
 
+  # These three methods were inside `private` before, but they need to be
+  # callable from the class-level wrappers above and from services/jobs.
+  # Moved them out of private so they're public instance methods now.
+
+  # Mark slots as pending (called when user confirms)
+  def set_pending_slots(date, start_slot, end_slot)
+    key = format(PENDING_KEY, resource_id: @resource.id, date: date.to_s)
+    (start_slot...end_slot).each do |slot|
+      redis.setbit(key, slot, 1)
+    end
+    redis.expire(key, PENDING_TTL)
+  end
+
+  # Clear pending slots (called when job succeeds or fails)
+  def clear_pending_slots(date, start_slot, end_slot)
+    key = format(PENDING_KEY, resource_id: @resource.id, date: date.to_s)
+    (start_slot...end_slot).each do |slot|
+      redis.setbit(key, slot, 0)
+    end
+  end
+
+  def set_occupied_slots(date, start_slot, end_slot)
+    key = format(OCCUPIED_KEY, resource_id: @resource.id, date: date.to_s)
+    (start_slot...end_slot).each do |slot|
+      redis.setbit(key, slot, 1)
+    end
+    redis.expire(key, OCCUPIED_TTL)
+  end
+
   private
 
   # Rebuild only occupied bitmap from DB (confirmed bookings)
@@ -87,7 +134,8 @@ class ResourceAvailabilityService
     end
 
     key = format(OCCUPIED_KEY, resource_id: @resource.id, date: date_str)
-    Redis.current.set(key, bitmap, ex: OCCUPIED_TTL)
+    # Changed from Redis.current (deprecated / not configured) to shared REDIS constant
+    redis.set(key, bitmap, ex: OCCUPIED_TTL)
 
     bitmap
   end
@@ -122,32 +170,10 @@ class ResourceAvailabilityService
     slot >= start_s && slot < end_s
   end
 
-# Mark slots as pending (called when user confirms)
-def set_pending_slots(date, start_slot, end_slot)
-  key = format(PENDING_KEY, resource_id: @resource.id, date: date.to_s)
-  (start_slot...end_slot).each do |slot|
-    Redis.current.setbit(key, slot, 1)
-  end
-  Redis.current.expire(key, PENDING_TTL)
-end
-
-# Clear pending slots (called when job succeeds or fails)
-def clear_pending_slots(date, start_slot, end_slot)
-  key = format(PENDING_KEY, resource_id: @resource.id, date: date.to_s)
-  (start_slot...end_slot).each do |slot|
-    Redis.current.setbit(key, slot, 0)
-  end
-end
-
-def set_occupied_slots(date, start_slot, end_slot)
-  key = format(OCCUPIED_KEY, resource_id: @resource.id, date: date.to_s)
-  (start_slot...end_slot).each do |slot|
-    Redis.current.setbit(key, slot, 1)
-  end
-  Redis.current.expire(key, OCCUPIED_TTL)
-end
-
+  # Switched from Redis.current (deprecated, was never configured in an
+  # initializer so it would blow up) to the shared REDIS constant from
+  # config/initializers/redis.rb. BookingLockService now uses the same constant.
   def redis
-    Redis.current
+    REDIS
   end
 end
