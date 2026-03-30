@@ -1,0 +1,58 @@
+<!-- Registration page: same centered card style as login -->
+<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+  <div class="w-full max-w-md space-y-6">
+
+    <!-- Brand header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-indigo-600">CUHK Booking</h1>
+      <p class="mt-1 text-sm text-gray-500">Create your account</p>
+    </div>
+
+    <!-- White card -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+
+      <h2 class="text-xl font-semibold text-gray-800">Sign up</h2>
+
+      <!-- Devise form — all Ruby logic kept exactly as-is -->
+      <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+        <!-- Devise error messages partial (untouched) -->
+        <%= render "devise/shared/error_messages", resource: resource %>
+
+        <!-- Email field -->
+        <div class="mb-4">
+          <%= f.label :email, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email",
+              class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-600 outline-none" %>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-4">
+          <%= f.label :password, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <% if @minimum_password_length %>
+            <p class="text-xs text-gray-400 mb-1"><em>(<%= @minimum_password_length %> characters minimum)</em></p>
+          <% end %>
+          <%= f.password_field :password, autocomplete: "new-password",
+              class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-600 outline-none" %>
+        </div>
+
+        <!-- Password confirmation -->
+        <div class="mb-5">
+          <%= f.label :password_confirmation, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password",
+              class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-600 outline-none" %>
+        </div>
+
+        <!-- Submit button -->
+        <div>
+          <%= f.submit "Sign up",
+              class: "w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 cursor-pointer transition" %>
+        </div>
+      <% end %>
+
+      <!-- Devise shared links (log in, forgot password, etc.) -->
+      <div class="text-center text-sm text-gray-500 space-y-1 pt-2 border-t border-gray-100">
+        <%= render "devise/shared/links" %>
+      </div>
+    </div>
+  </div>
+</div>
