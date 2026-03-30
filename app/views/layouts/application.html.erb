@@ -1,35 +1,65 @@
+<!-- Here is the student login page layout-->
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "App" %></title>
+    <title>CSCI3100 Booking System</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="App">
-    <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <%= favicon_link_tag 'icon.ico' %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    
+    <style>
+      body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; }
+      .app-sidebar { width: 250px; background-color: #34495e; color: white; padding: 20px; }
+      .app-sidebar h2 { margin-top: 0; border-bottom: 1px solid #7f8c8d; padding-bottom: 10px; }
+      .app-sidebar a { color: #ecf0f1; text-decoration: none; display: block; margin: 10px 0; padding: 5px; }
+      .app-sidebar a:hover { background-color: #2c3e50; border-radius: 4px; }
+      .app-content { flex-grow: 1; padding: 20px; background-color: #fdfdfd; overflow-y: auto; }
+      .flash-messages { margin-bottom: 20px; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; color: #155724; border-radius: 4px; }
+    </style>
   </head>
 
   <body>
-    <% if notice %>
-      <p class="notice"><%= notice %></p>
+    <!-- Only show sidebar if the user is actually logged in -->
+    <% if user_signed_in? %>
+      <div class="app-sidebar">
+        <div style="text-align: center; margin-bottom: 20px;">
+        <!-- Adjust the width as needed for your specific logo -->
+        <%= image_tag "logo.png", alt: "CSCI3100 Booking Logo", style: "width: 150px; height: auto;" %>
+        </div>
+        <h2 style="margin-top: 0; border-bottom: 1px solid #7f8c8d; padding-bottom: 10px;">Student Portal</h2>
+        
+        <!-- Safe navigation operator (&.) prevents crashes if department is nil -->
+        <p>Dept: <%= current_user&.department&.name || "N/A" %></p>
+        
+        <nav>
+          <%= link_to "Home", root_path %>
+          <!-- Add student routes here later -->
+          <!-- <%= link_to "Book a Room", '#' %> -->
+          <!-- <%= link_to "My Bookings", '#' %> -->
+          
+          <hr style="border-color: #7f8c8d; margin: 20px 0;">
+          <%= button_to "Log Out", destroy_user_session_path, method: :delete, form: { data: { turbo: false } }, style: "background: #e74c3c; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; width: 100%;" %>
+        </nav>
+      </div>
     <% end %>
-    <% if alert %>
-      <p class="alert"><%= alert %></p>
-    <% end %>
-    <%= yield %>
+
+    <!-- Main Content Area -->
+    <div class="app-content">
+      <% if notice %>
+        <div class="flash-messages notice"><%= notice %></div>
+      <% end %>
+      <% if alert %>
+        <div class="flash-messages alert" style="background: #f8d7da; border-color: #f5c6cb; color: #721c24;"><%= alert %></div>
+      <% end %>
+
+      <%= yield %>
+    </div>
   </body>
 </html>
