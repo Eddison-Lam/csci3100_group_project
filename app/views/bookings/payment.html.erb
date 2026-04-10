@@ -1,0 +1,84 @@
+<h1>Complete Payment</h1>
+
+<div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 25px; max-width: 600px;">
+  <h2 style="margin-top: 0; color: #e67e22;">⏳ Payment Required</h2>
+
+  <% if @booking.payment_expires_at %>
+    <div id="countdown" style="background: #fef9e7; border: 1px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
+      <p style="margin: 0; font-size: 0.9em; color: #7f8c8d;">Time remaining to complete payment:</p>
+      <p id="timer" style="margin: 5px 0 0; font-size: 2em; font-weight: bold; color: #e67e22;"></p>
+    </div>
+  <% end %>
+
+  <table style="width: 100%; margin-bottom: 20px;">
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Resource:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @booking.resource.name %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Date:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @booking.booking_date.strftime("%A, %B %d, %Y") %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Time:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @booking.time_range_display %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Duration:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @booking.duration_minutes %> minutes</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Amount Due:</td>
+      <td style="padding: 8px 0; font-weight: bold; font-size: 1.2em; color: #e67e22;">
+        $<%= sprintf("%.2f", @booking.total_cost) %>
+      </td>
+    </tr>
+  </table>
+
+  <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    <h3 style="margin-top: 0;">Mock Payment</h3>
+    <p style="color: #7f8c8d; font-size: 0.9em;">This is a simulated payment for demonstration purposes.</p>
+  </div>
+
+  <div style="display: flex; gap: 10px;">
+    <%= button_to "Pay Now — $#{sprintf("%.2f", @booking.total_cost)}",
+          pay_booking_path(@booking),
+          method: :post,
+          style: "background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;" %>
+
+    <%= link_to "Cancel Booking", booking_path(@booking, _method: :delete),
+          data: { turbo_method: :delete, turbo_confirm: "Are you sure? Your booking will be cancelled." },
+          style: "background: #e74c3c; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center;" %>
+  </div>
+</div>
+
+<% if @booking.payment_expires_at %>
+<script>
+  const expiresAt = new Date("<%= @booking.payment_expires_at.iso8601 %>");
+
+  function updateTimer() {
+    const now = new Date();
+    const diff = expiresAt - now;
+
+    if (diff <= 0) {
+      document.getElementById('timer').textContent = 'EXPIRED';
+      document.getElementById('timer').style.color = '#e74c3c';
+      // Redirect after a moment
+      setTimeout(() => { window.location.reload(); }, 2000);
+      return;
+    }
+
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    document.getElementById('timer').textContent =
+      String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+
+    if (diff < 300000) { // less than 5 minutes
+      document.getElementById('timer').style.color = '#e74c3c';
+    }
+  }
+
+  updateTimer();
+  setInterval(updateTimer, 1000);
+</script>
+<% end %>

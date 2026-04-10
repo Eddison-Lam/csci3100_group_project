@@ -1,0 +1,76 @@
+<h1>My Bookings</h1>
+
+<!-- Tabs -->
+<div style="display: flex; gap: 0; margin-bottom: 20px;">
+  <%= link_to "Rooms",
+        bookings_path(tab: "rooms"),
+        style: "padding: 12px 24px; text-decoration: none; border: 1px solid #ddd; border-bottom: #{@tab == 'rooms' ? '3px solid #3498db' : '1px solid #ddd'}; background: #{@tab == 'rooms' ? 'white' : '#f8f9fa'}; color: #{@tab == 'rooms' ? '#3498db' : '#7f8c8d'}; font-weight: #{@tab == 'rooms' ? 'bold' : 'normal'}; border-radius: 4px 4px 0 0;" %>
+  <%= link_to "Equipment",
+        bookings_path(tab: "equipment"),
+        style: "padding: 12px 24px; text-decoration: none; border: 1px solid #ddd; border-bottom: #{@tab == 'equipment' ? '3px solid #2ecc71' : '1px solid #ddd'}; background: #{@tab == 'equipment' ? 'white' : '#f8f9fa'}; color: #{@tab == 'equipment' ? '#2ecc71' : '#7f8c8d'}; font-weight: #{@tab == 'equipment' ? 'bold' : 'normal'}; border-radius: 4px 4px 0 0;" %>
+</div>
+
+<% if @bookings.any? %>
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #ecf0f1;">
+        <th style="padding: 10px; text-align: left;">Resource</th>
+        <th style="padding: 10px; text-align: left;">Date</th>
+        <th style="padding: 10px; text-align: left;">Time</th>
+        <th style="padding: 10px; text-align: left;">Duration</th>
+        <th style="padding: 10px; text-align: left;">Cost</th>
+        <th style="padding: 10px; text-align: left;">Status</th>
+        <th style="padding: 10px; text-align: left;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @bookings.each do |booking| %>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 10px;"><%= booking.resource.name %></td>
+          <td style="padding: 10px;"><%= booking.booking_date.strftime("%b %d, %Y") %></td>
+          <td style="padding: 10px;"><%= booking.time_range_display %></td>
+          <td style="padding: 10px;"><%= booking.duration_minutes %> min</td>
+          <td style="padding: 10px;">
+            <% if booking.total_cost.to_f > 0 %>
+              $<%= sprintf("%.2f", booking.total_cost) %>
+            <% else %>
+              <span style="color: #27ae60;">Free</span>
+            <% end %>
+          </td>
+          <td style="padding: 10px;">
+            <% status_bg = case booking.status
+                           when "confirmed" then "#27ae60"
+                           when "pending_payment" then "#f39c12"
+                           when "cancelled" then "#e74c3c"
+                           when "no_show" then "#95a5a6"
+                           else "#7f8c8d"
+                           end %>
+            <span style="background: <%= status_bg %>; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">
+              <%= booking.status.titleize %>
+            </span>
+          </td>
+          <td style="padding: 10px;">
+            <%= link_to "View", booking_path(booking), style: "color: #3498db; margin-right: 8px;" %>
+            <% if booking.pending_payment? %>
+              <%= link_to "Pay", payment_booking_path(booking), style: "color: #e67e22; margin-right: 8px;" %>
+            <% end %>
+            <% if booking.confirmed? || booking.pending_payment? %>
+              <%= link_to "Cancel", booking_path(booking),
+                    data: { turbo_method: :delete, turbo_confirm: "Cancel this booking?" },
+                    style: "color: #e74c3c;" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p style="color: #7f8c8d; font-style: italic; padding: 20px 0;">
+    No <%= @tab %> bookings found.
+    <% if @tab == "rooms" %>
+      <%= link_to "Browse rooms to book", rooms_path %>
+    <% else %>
+      <%= link_to "Browse equipment to book", equipment_index_path %>
+    <% end %>
+  </p>
+<% end %>

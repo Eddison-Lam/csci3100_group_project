@@ -1,0 +1,62 @@
+<h1>Confirm Your Booking</h1>
+
+<div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 25px; max-width: 600px;">
+  <h2 style="margin-top: 0; color: #2c3e50;"><%= @resource.name %></h2>
+
+  <table style="width: 100%; margin-bottom: 20px;">
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Date:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @date.strftime("%A, %B %d, %Y") %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Time:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @resource.slot_to_time(@start_slot) %> – <%= @resource.slot_to_time(@end_slot) %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Duration:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @duration_slots * 30 %> minutes</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Cost:</td>
+      <td style="padding: 8px 0; font-weight: bold;">
+        <% if @total_cost > 0 %>
+          $<%= sprintf("%.2f", @total_cost) %>
+          <span style="color: #7f8c8d; font-weight: normal;">(<%= @duration_slots %> slots × $<%= @resource.price_per_unit %>)</span>
+        <% else %>
+          <span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 4px;">Free</span>
+        <% end %>
+      </td>
+    </tr>
+  </table>
+
+  <%= form_with url: bookings_path, method: :post, local: true do |f| %>
+    <%= hidden_field_tag :resource_id, @resource.id %>
+    <%= hidden_field_tag :date, @date %>
+    <%= hidden_field_tag :start_slot, @start_slot %>
+    <%= hidden_field_tag :end_slot, @end_slot %>
+    <%= hidden_field_tag :lock_token, @lock_token %>
+
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; font-weight: bold; margin-bottom: 5px;">Purpose <span style="color: #e74c3c;">*</span></label>
+      <%= text_field_tag :purpose, nil, required: true, placeholder: "e.g., Group study session",
+            style: "width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" %>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-weight: bold; margin-bottom: 5px;">Notes (optional)</label>
+      <%= text_area_tag :notes, nil, rows: 3, placeholder: "Any additional notes...",
+            style: "width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" %>
+    </div>
+
+    <% if @total_cost > 0 %>
+      <p style="color: #e67e22; font-size: 0.9em;">
+        ⚠️ This is a paid booking. You will have <strong>30 minutes</strong> to complete payment after confirming.
+      </p>
+    <% end %>
+
+    <div style="display: flex; gap: 10px;">
+      <%= submit_tag "Confirm Booking", style: "background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 1em;" %>
+      <%= link_to "Cancel", :back, style: "background: #95a5a6; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none;" %>
+    </div>
+  <% end %>
+</div>

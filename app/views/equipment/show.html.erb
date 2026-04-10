@@ -1,0 +1,199 @@
+<h1><%= @equipment.name %></h1>
+<p style="color: #7f8c8d;">
+  📦 Quantity: <%= @equipment.quantity || 1 %> &nbsp;|&nbsp;
+  Dept: <%= @equipment.department&.name || "N/A" %> &nbsp;|&nbsp;
+  Hours: <%= @equipment.operating_hours_display %> &nbsp;|&nbsp;
+  <% if @equipment.price_per_unit.to_f > 0 %>
+    Price: $<%= @equipment.price_per_unit %>/slot (30 min)
+  <% else %>
+    <span style="color: #27ae60; font-weight: bold;">Free</span>
+  <% end %>
+</p>
+
+<% if @equipment.description.present? %>
+  <p><%= @equipment.description %></p>
+<% end %>
+
+<!-- Date navigation -->
+<div style="display: flex; align-items: center; gap: 15px; margin: 20px 0;">
+  <% prev_date = @date - 1.day %>
+  <% next_date = @date + 1.day %>
+  <% max_date = Date.current + @equipment.effective_advance_days.days %>
+
+  <% if prev_date >= Date.current %>
+    <%= link_to "← Previous Day", equipment_path(@equipment, date: prev_date), style: "background: #ecf0f1; padding: 8px 16px; border-radius: 4px; text-decoration: none; color: #2c3e50;" %>
+  <% end %>
+
+  <h2 style="margin: 0;"><%= @date.strftime("%A, %B %d, %Y") %></h2>
+
+  <% if next_date <= max_date %>
+    <%= link_to "Next Day →", equipment_path(@equipment, date: next_date), style: "background: #ecf0f1; padding: 8px 16px; border-radius: 4px; text-decoration: none; color: #2c3e50;" %>
+  <% end %>
+
+  <form style="margin-left: auto;">
+    <input type="date" name="date" value="<%= @date %>"
+           min="<%= Date.current %>" max="<%= max_date %>"
+           onchange="this.form.submit()"
+           style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+  </form>
+</div>
+
+<!-- Slot selection legend -->
+<div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 0.9em;">
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #2ecc71; border-radius: 3px; vertical-align: middle;"></span> Available</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #e74c3c; border-radius: 3px; vertical-align: middle;"></span> Occupied</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #f39c12; border-radius: 3px; vertical-align: middle;"></span> Pending</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #95a5a6; border-radius: 3px; vertical-align: middle;"></span> Locked</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #3498db; border-radius: 3px; vertical-align: middle;"></span> Selected</span>
+</div>
+
+<!-- Slot grid -->
+<div id="slot-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 4px;">
+  <% @slots.each do |slot_data| %>
+    <% slot = slot_data[:slot] %>
+    <% status = slot_data[:status] %>
+    <% available = slot_data[:available] %>
+    <% time_label = @equipment.slot_to_time(slot) %>
+    <%
+      bg = case status
+           when :free then "#2ecc71"
+           when :occupied then "#e74c3c"
+           when :pending then "#f39c12"
+           when :locked then "#95a5a6"
+           else "#ccc"
+           end
+    %>
+    <div class="slot-cell"
+         data-slot="<%= slot %>"
+         data-available="<%= available %>"
+         style="background: <%= bg %>; color: white; padding: 8px; text-align: center; border-radius: 4px; font-size: 0.85em;
+                <%= "cursor: pointer;" if available %>"
+         <% if available %>
+           onclick="toggleSlot(this, <%= slot %>)"
+         <% end %>>
+      <%= time_label %>
+    </div>
+  <% end %>
+</div>
+
+<!-- Selection summary -->
+<div id="selection-summary" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;">
+  <h3>Selected Time Slots</h3>
+  <p>From: <strong id="sel-start"></strong> To: <strong id="sel-end"></strong></p>
+  <p>Duration: <strong id="sel-duration"></strong></p>
+  <% if @equipment.price_per_unit.to_f > 0 %>
+    <p>Estimated Cost: <strong id="sel-cost"></strong></p>
+  <% else %>
+    <p style="color: #27ae60; font-weight: bold;">Free</p>
+  <% end %>
+  <p id="sel-error" style="color: #e74c3c; display: none;"></p>
+  <button id="btn-confirm" onclick="confirmSelection()" style="background: #2ecc71; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 1em;">
+    Proceed to Book
+  </button>
+</div>
+
+<script>
+  const selectedSlots = new Set();
+  const maxSlots = <%= @equipment.effective_max_slots %>;
+  const minSlots = <%= @equipment.effective_min_slots %>;
+  const pricePerSlot = <%= @equipment.price_per_unit.to_f %>;
+  const resourceId = <%= @equipment.id %>;
+  const dateStr = "<%= @date %>";
+  const slotToTime = (slot) => {
+    const h = Math.floor(slot / 2);
+    const m = (slot % 2) * 30;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  };
+
+  function toggleSlot(el, slot) {
+    if (selectedSlots.has(slot)) {
+      selectedSlots.delete(slot);
+      el.style.background = '#2ecc71';
+    } else {
+      selectedSlots.add(slot);
+      el.style.background = '#3498db';
+    }
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const summary = document.getElementById('selection-summary');
+    const errorEl = document.getElementById('sel-error');
+    errorEl.style.display = 'none';
+
+    if (selectedSlots.size === 0) {
+      summary.style.display = 'none';
+      return;
+    }
+    summary.style.display = 'block';
+
+    const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
+    let contiguous = true;
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] !== sorted[i-1] + 1) { contiguous = false; break; }
+    }
+
+    const startSlot = sorted[0];
+    const endSlot = sorted[sorted.length - 1] + 1;
+    const count = sorted.length;
+
+    document.getElementById('sel-start').textContent = slotToTime(startSlot);
+    document.getElementById('sel-end').textContent = slotToTime(endSlot);
+    document.getElementById('sel-duration').textContent = (count * 30) + ' minutes';
+
+    if (pricePerSlot > 0) {
+      document.getElementById('sel-cost').textContent = '$' + (count * pricePerSlot).toFixed(2);
+    }
+
+    const btn = document.getElementById('btn-confirm');
+    if (!contiguous) {
+      errorEl.textContent = 'Please select contiguous time slots.';
+      errorEl.style.display = 'block';
+      btn.disabled = true;
+    } else if (count > maxSlots) {
+      errorEl.textContent = 'Maximum ' + (maxSlots * 30) + ' minutes allowed.';
+      errorEl.style.display = 'block';
+      btn.disabled = true;
+    } else if (count < minSlots) {
+      errorEl.textContent = 'Minimum ' + (minSlots * 30) + ' minutes required.';
+      errorEl.style.display = 'block';
+      btn.disabled = true;
+    } else {
+      btn.disabled = false;
+    }
+  }
+
+  function confirmSelection() {
+    const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
+    const startSlot = sorted[0];
+    const endSlot = sorted[sorted.length - 1] + 1;
+    const btn = document.getElementById('btn-confirm');
+    btn.disabled = true;
+    btn.textContent = 'Reserving...';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    fetch('/equipment/' + resourceId + '/availability?date=' + dateStr +
+          '&start_slot=' + startSlot + '&end_slot=' + endSlot, {
+      headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrfToken }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.lock_token) {
+        window.location.href = '/bookings/new?resource_id=' + resourceId +
+                                '&date=' + dateStr +
+                                '&start_slot=' + startSlot +
+                                '&end_slot=' + endSlot +
+                                '&lock_token=' + encodeURIComponent(data.lock_token);
+      } else {
+        alert(data.error || 'Failed to reserve slots. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Proceed to Book';
+      }
+    })
+    .catch(() => {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Proceed to Book';
+    });
+  }
+</script>
