@@ -102,14 +102,43 @@
   };
 
   function toggleSlot(el, slot) {
-    if (selectedSlots.has(slot)) {
+    const isSelected = selectedSlots.has(slot);
+    
+    if (isSelected) {
       selectedSlots.delete(slot);
       el.style.background = '#2ecc71';
     } else {
+      if (selectedSlots.size >= maxSlots) {
+        showError('Maximum ' + (maxSlots * 30) + ' minutes (' + maxSlots + ' slots) already selected.');
+        flashElement(el, '#e74c3c');
+        return;
+      }
       selectedSlots.add(slot);
       el.style.background = '#3498db';
     }
     updateSummary();
+  }
+
+  function showError(message) {
+    const errorEl = document.getElementById('sel-error');
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+
+  function hideError() {
+    const errorEl = document.getElementById('sel-error');
+    errorEl.style.display = 'none';
+  }
+
+  // visualization - red flash
+  function flashElement(el, color) {
+    const originalBg = el.style.background;
+    el.style.background = color;
+    el.style.transition = 'background 0.2s';
+    
+    setTimeout(() => {
+      el.style.background = originalBg;
+    }, 200);
   }
 
   function updateSummary() {
@@ -119,6 +148,7 @@
 
     if (selectedSlots.size === 0) {
       summary.style.display = 'none';
+      hideError();
       return;
     }
     summary.style.display = 'block';
@@ -143,21 +173,25 @@
     }
 
     const btn = document.getElementById('btn-confirm');
+    // Decoupling
+    let hasError= false
     if (!contiguous) {
-      errorEl.textContent = 'Please select contiguous time slots.';
-      errorEl.style.display = 'block';
-      btn.disabled = true;
-    } else if (count > maxSlots) {
-      errorEl.textContent = 'Maximum ' + (maxSlots * 30) + ' minutes allowed.';
-      errorEl.style.display = 'block';
-      btn.disabled = true;
+      showError('Please select contiguous (consecutive) time slots.');
+      hasError = true;
+    } 
+    // Note: count > maxSlots should never happen due to toggleSlot blocking
+    else if (count > maxSlots) {
+      showError('Maximum ' + (maxSlots * 30) + ' minutes (' + maxSlots + ' slots) allowed.');
+      hasError = true;
     } else if (count < minSlots) {
-      errorEl.textContent = 'Minimum ' + (minSlots * 30) + ' minutes required.';
-      errorEl.style.display = 'block';
-      btn.disabled = true;
-    } else {
-      btn.disabled = false;
+      showError('Minimum ' + (minSlots * 30) + ' minutes (' + minSlots + ' slots) required.');
+      hasError = true;
+    } 
+    // If no error, hide error message
+    if (!hasError) {
+      hideError();
     }
+    btn.disabled = hasError;
   }
 
   function confirmSelection() {
