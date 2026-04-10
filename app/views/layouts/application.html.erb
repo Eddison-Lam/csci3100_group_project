@@ -40,9 +40,9 @@
         
         <nav>
           <%= link_to "Home", root_path %>
-          <!-- Add student routes here later -->
-          <!-- <%= link_to "Book a Room", '#' %> -->
-          <!-- <%= link_to "My Bookings", '#' %> -->
+          <%= link_to "Book a Room", rooms_path %>
+          <%= link_to "Book Equipment", equipment_index_path %>
+          <%= link_to "My Bookings", bookings_path %>
           
           <hr style="border-color: #7f8c8d; margin: 20px 0;">
           <%= button_to "Log Out", destroy_user_session_path, method: :delete, form: { data: { turbo: false } }, style: "background: #e74c3c; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; width: 100%;" %>

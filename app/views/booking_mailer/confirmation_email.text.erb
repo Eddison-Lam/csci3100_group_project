@@ -1,0 +1,14 @@
+Booking Confirmed!
+
+Hi <%= @user.email %>,
+
+Your booking has been confirmed:
+
+Resource: <%= @resource.name %>
+Date: <%= @booking.booking_date.strftime("%A, %B %d, %Y") %>
+Time: <%= @booking.time_range_display %>
+Duration: <%= @booking.duration_minutes %> minutes
+<% if @booking.total_cost.to_f > 0 %>Cost: $<%= sprintf("%.2f", @booking.total_cost) %><% end %>
+Purpose: <%= @booking.purpose %>
+
+Thank you for using the CUHK Booking System.

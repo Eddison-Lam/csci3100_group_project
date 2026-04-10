@@ -1,7 +1,7 @@
 class Booking < ApplicationRecord
   # Updated from old Hash syntax `enum status: {...}` which was removed in Rails 8.1.
   # The User model already used the new syntax, this one was missed.
-  enum :status, { confirmed: 0, cancelled: 1, no_show: 2 }
+  enum :status, { confirmed: 0, cancelled: 1, no_show: 2, pending_payment: 3 }
 
   belongs_to :resource
   belongs_to :user
@@ -20,8 +20,10 @@ class Booking < ApplicationRecord
 
   scope :active, -> { where(status: :confirmed) }
   scope :on_date, ->(date) { where(booking_date: date) }
+  scope :pending_payment_expired, -> { where(status: :pending_payment).where("payment_expires_at <= ?", Time.current) }
 
-  before_validation :auto_confirm, on: :create
+  before_validation :set_initial_status, on: :create
+  before_validation :calculate_total_cost, on: :create
 
   def duration_slots  = end_slot - start_slot
   def duration_minutes = duration_slots * 30
@@ -60,8 +62,19 @@ class Booking < ApplicationRecord
   # It just sets the default status to confirmed if it isn't set yet.
   # The original code had `before_validation :auto_confirm` but never
   # defined the method, so every Booking.create raised NoMethodError.
-  def auto_confirm
-    self.status ||= :confirmed
+  def set_initial_status
+    return if status.present? && !confirmed?
+    if resource && resource.price_per_unit.to_f > 0
+      self.status = :pending_payment
+      self.payment_expires_at = Time.current + 30.minutes
+    else
+      self.status = :confirmed
+    end
+  end
+
+  def calculate_total_cost
+    return unless resource && start_slot && end_slot
+    self.total_cost = (end_slot - start_slot) * resource.price_per_unit.to_f
   end
 
   def end_after_start
@@ -103,9 +116,9 @@ class Booking < ApplicationRecord
   def no_overlap
     return unless resource_id && booking_date && start_slot && end_slot
 
-    # 只檢查 confirmed 的 booking（pending 只是臨時，不算衝突）
+    # 只檢查 confirmed 和 pending_payment 的 booking（cancelled/no_show 不算衝突）
     overlap = Booking.where(resource_id:, booking_date:)
-                     .where(status: :confirmed)
+                     .where(status: [ :confirmed, :pending_payment ])
                      .where("start_slot < ? AND end_slot > ?", end_slot, start_slot)
     errors.add(:base, "Time slot conflicts with existing booking") if overlap.exists?
   end

@@ -41,8 +41,25 @@ class BookingService
       BookingLockService.release_lock(lock_token)
     end
 
+    post_create(booking)
+
     Result.new(success?: true, booking: booking)
   rescue ActiveRecord::Deadlocked
     Result.new(success?: false, error: "System busy, please retry")
   end
-end
+
+  private
+
+  # After a booking is created, handle bitmap updates and schedule expiry if needed.
+  def self.post_create(booking)
+    if booking.pending_payment?
+      # Mark slots as pending so others see them as blocked
+      service = ResourceAvailabilityService.new(booking.resource)
+      service.set_pending_slots(booking.booking_date, booking.start_slot, booking.end_slot)
+      # Schedule auto-cancel after payment deadline
+      BookingPaymentExpiryJob.set(wait_until: booking.payment_expires_at).perform_later(booking.id)
+    else
+      # Free resource — immediately occupy
+      booking.update_occupied_bitmap
+    end
+  end
