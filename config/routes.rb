@@ -19,6 +19,9 @@ Rails.application.routes.draw do
   end
 
   resources :bookings, only: [ :new, :create, :show, :index, :destroy ] do
+    collection do
+      post :release_lock
+    end
     member do
       get  :payment     # mock payment page
       post :pay         # process mock payment

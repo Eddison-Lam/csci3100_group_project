@@ -4,7 +4,7 @@ default: &default
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: root
   password: <%= ENV['DATABASE_PASSWORD'] %>
-  host: <%= ENV['DATABASE_HOST'] %>
+  host: db
   port: 3306
 
 development:
@@ -12,5 +12,10 @@ development:
   database: <%= ENV['DB_NAME'] %>
 
 test:
-  <<: *default
-  database: app_test
+  adapter: mysql2
+  encoding: utf8mb4
+  database: your_test_db_name
+  username: root
+  password: <%= ENV['DATABASE_PASSWORD'] %>   # ← 必须正确填写
+  host: db                      # ← 如果 MySQL 在容器中，用服务名 db
+  port: 3306

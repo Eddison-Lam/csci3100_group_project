@@ -2,7 +2,6 @@ class ResourceAvailabilityService
   # Redis key formats
   OCCUPIED_KEY = "occupied:%<resource_id>d:%<date>s".freeze
   PENDING_KEY  = "pending:%<resource_id>d:%<date>s".freeze
-  LOCK_INDEX_KEY = "locks:%<resource_id>d:%<date>s".freeze
 
   # TTL constants (in seconds)
   OCCUPIED_TTL = 86_400  # 24 hours
@@ -25,6 +24,12 @@ class ResourceAvailabilityService
     service.clear_pending_slots(date, slots.min, slots.max + 1)
   end
 
+  def self.clear_occupied_bitmap(resource_id, date, slots)
+    resource = Resource.find(resource_id)
+    service  = new(resource)
+    service.clear_occupied_slots(date, slots.min, slots.max + 1)
+  end
+
   def initialize(resource)
     @resource = resource
   end
@@ -37,38 +42,43 @@ class ResourceAvailabilityService
 
     key_occupied = format(OCCUPIED_KEY, resource_id: resource_id, date: date_str)
     key_pending  = format(PENDING_KEY,  resource_id: resource_id, date: date_str)
-    key_locks    = format(LOCK_INDEX_KEY, resource_id: resource_id, date: date_str)
 
-    # Fetch from Redis
-    occupied = redis.get(key_occupied)
-    pending  = redis.get(key_pending)
-    lock_tokens = redis.smembers(key_locks) || []
-
-    # Handle cache miss for occupied (rebuild from DB)
-    if occupied.nil?
-      occupied = rebuild_and_cache_occupied_bitmap(date)
+    # Rebuild occupied bitmap from DB if key doesn't exist in Redis
+    unless redis.exists?(key_occupied)
+      rebuild_and_cache_occupied_bitmap(date)
     end
 
-    # Handle cache miss for pending (no rebuild, just empty bitmap)
-    if pending.nil?
-      pending = "\x00" * 8
-      redis.set(key_pending, pending, ex: PENDING_TTL)
+    # Ensure pending key exists (so getbit returns 0 rather than needing special handling)
+    unless redis.exists?(key_pending)
+      redis.set(key_pending, "\x00" * 8, ex: PENDING_TTL)
     end
 
-    # Build final availability
+    # Collect lock tokens from BookingLockService's key
+    lock_key = "resource_locks:#{resource_id}:#{date_str}"
+    lock_tokens = redis.smembers(lock_key) || []
+
+    # Compute past-slot cutoff for today (HKT = UTC+8)
+    hk_now = Time.now.utc + 8.hours
+    is_today = date == hk_now.to_date
+    # Current slot: e.g. 14:44 → slot 29 (14*2 + 1). Slots 0..28 are in the past.
+    current_slot = is_today ? (hk_now.hour * 2 + (hk_now.min >= 30 ? 1 : 0)) : nil
+
+    # Build final availability using redis.getbit for reliable bit reads
     results = []
 
     @resource.effective_op_start.upto(@resource.effective_op_end) do |slot|
       status = :free
       mine   = false
 
-      # Priority: occupied > pending > locked > free
-      if bit_set?(occupied, slot)
+      # Priority: past > occupied > pending > locked/pending > free
+      if is_today && slot < current_slot
+        status = :past
+      elsif redis.getbit(key_occupied, slot) == 1
         status = :occupied
-      elsif bit_set?(pending, slot)
+      elsif redis.getbit(key_pending, slot) == 1
         status = :pending
       elsif lock_tokens.any? { |token| lock_covers_slot?(token, slot) }
-        status = :locked
+        status = :pending
         if current_user
           token = lock_tokens.find { |t| lock_covers_slot?(t, slot) }
           lock_data = redis.hgetall("booking_lock:#{token}")
@@ -116,48 +126,32 @@ class ResourceAvailabilityService
     redis.expire(key, OCCUPIED_TTL)
   end
 
+  # Clear occupied slots (called when a confirmed booking is cancelled)
+  def clear_occupied_slots(date, start_slot, end_slot)
+    key = format(OCCUPIED_KEY, resource_id: @resource.id, date: date.to_s)
+    (start_slot...end_slot).each do |slot|
+      redis.setbit(key, slot, 0)
+    end
+  end
+
   private
 
   # Rebuild only occupied bitmap from DB (confirmed bookings)
+  # Uses redis.setbit for consistency with set_occupied_slots
   def rebuild_and_cache_occupied_bitmap(date)
-    date_str = date.to_s
+    key = format(OCCUPIED_KEY, resource_id: @resource.id, date: date.to_s)
 
     confirmed_bookings = Booking.where(resource_id: @resource.id)
                                 .where(booking_date: date)
                                 .where(status: :confirmed)
                                 .pluck(:start_slot, :end_slot)
 
-    bitmap = "\x00" * 8
+    # Initialize key so it exists (prevents repeated rebuilds)
+    redis.set(key, "\x00" * 8, ex: OCCUPIED_TTL)
 
     confirmed_bookings.each do |s, e|
-      s.upto(e - 1) { |slot| set_bit!(bitmap, slot) }
+      s.upto(e - 1) { |slot| redis.setbit(key, slot, 1) }
     end
-
-    key = format(OCCUPIED_KEY, resource_id: @resource.id, date: date_str)
-    # Changed from Redis.current (deprecated / not configured) to shared REDIS constant
-    redis.set(key, bitmap, ex: OCCUPIED_TTL)
-
-    bitmap
-  end
-
-  # Set a bit in the bitmap string
-  def set_bit!(bitmap_str, slot)
-    byte_idx = slot / 8
-    bit_idx  = slot % 8
-
-    bytes = bitmap_str.bytes
-    bytes[byte_idx] |= (1 << bit_idx)
-    bitmap_str.replace(bytes.pack("C*"))
-  end
-
-  # Check if a bit is set
-  def bit_set?(bitmap_str, slot)
-    return false unless bitmap_str && bitmap_str.bytesize > (slot / 8)
-
-    byte_idx = slot / 8
-    bit_idx  = slot % 8
-    byte = bitmap_str.getbyte(byte_idx)
-    (byte & (1 << bit_idx)) != 0
   end
 
   # Check if a lock token covers the given slot

@@ -51,6 +51,11 @@ class Booking < ApplicationRecord
     ResourceAvailabilityService.update_occupied_bitmap(resource_id, booking_date, (start_slot...end_slot).to_a)
   end
 
+  # 新增：清除 occupied bitmap（取消已確認的 booking 時 call）
+  def clear_occupied_bitmap
+    ResourceAvailabilityService.clear_occupied_bitmap(resource_id, booking_date, (start_slot...end_slot).to_a)
+  end
+
   # 新增：清除 pending bitmap（job 完成或失敗時 call）
   def clear_pending_bitmap
     ResourceAvailabilityService.clear_pending_bitmap(resource_id, booking_date, (start_slot...end_slot).to_a)
@@ -111,6 +116,15 @@ class Booking < ApplicationRecord
   def not_in_past
     return unless booking_date
     errors.add(:booking_date, "cannot be in the past") if booking_date < Date.current
+
+    # Block past time slots for today (HKT = UTC+8)
+    if booking_date == Date.current && start_slot.present?
+      hk_now = Time.now.utc + 8.hours
+      current_slot = hk_now.hour * 2 + (hk_now.min >= 30 ? 1 : 0)
+      if start_slot < current_slot
+        errors.add(:base, "Cannot book time slots that have already passed")
+      end
+    end
   end
 
   def no_overlap

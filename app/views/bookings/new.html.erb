@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
+
 <h1>Confirm Your Booking</h1>
 
 <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 25px; max-width: 600px;">
@@ -29,7 +33,7 @@
     </tr>
   </table>
 
-  <%= form_with url: bookings_path, method: :post, local: true do |f| %>
+  <%= form_with url: bookings_path, method: :post, local: true, id: "booking-form" do |f| %>
     <%= hidden_field_tag :resource_id, @resource.id %>
     <%= hidden_field_tag :date, @date %>
     <%= hidden_field_tag :start_slot, @start_slot %>
@@ -60,3 +64,32 @@
     </div>
   <% end %>
 </div>
+
+<script>
+  (function() {
+    const lockToken = "<%= j @lock_token.to_s %>";
+    let formSubmitted = false;
+
+    // Track form submission so we don't release the lock when confirming
+    const form = document.getElementById('booking-form');
+    if (form) {
+      form.addEventListener('submit', function() { formSubmitted = true; });
+    }
+
+    function releaseLock() {
+      if (formSubmitted || !lockToken) return;
+      formSubmitted = true; // prevent double-release
+      const csrfToken = document.querySelector('meta[name="csrf-token"]');
+      if (!csrfToken) return;
+      navigator.sendBeacon('/bookings/release_lock', new URLSearchParams({
+        lock_token: lockToken,
+        authenticity_token: csrfToken.content
+      }));
+    }
+
+    // Release lock when leaving page (tab close, URL change, refresh)
+    window.addEventListener('beforeunload', releaseLock);
+    // Release lock on Turbo navigation (internal link clicks, back button)
+    document.addEventListener('turbo:before-visit', releaseLock);
+  })();
+</script>

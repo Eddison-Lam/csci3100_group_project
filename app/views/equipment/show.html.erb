@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <meta name="turbo-visit-control" content="reload">
+<% end %>
+
 <h1><%= @equipment.name %></h1>
 <p style="color: #7f8c8d;">
   📦 Quantity: <%= @equipment.quantity || 1 %> &nbsp;|&nbsp;
@@ -43,7 +47,7 @@
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #2ecc71; border-radius: 3px; vertical-align: middle;"></span> Available</span>
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #e74c3c; border-radius: 3px; vertical-align: middle;"></span> Occupied</span>
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #f39c12; border-radius: 3px; vertical-align: middle;"></span> Pending</span>
-  <span><span style="display: inline-block; width: 16px; height: 16px; background: #95a5a6; border-radius: 3px; vertical-align: middle;"></span> Locked</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #95a5a6; border-radius: 3px; vertical-align: middle;"></span> Past</span>
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #3498db; border-radius: 3px; vertical-align: middle;"></span> Selected</span>
 </div>
 
@@ -59,7 +63,7 @@
            when :free then "#2ecc71"
            when :occupied then "#e74c3c"
            when :pending then "#f39c12"
-           when :locked then "#95a5a6"
+           when :past then "#95a5a6"
            else "#ccc"
            end
     %>
@@ -93,6 +97,7 @@
 </div>
 
 <script>
+(function() {
   const selectedSlots = new Set();
   const maxSlots = <%= @equipment.effective_max_slots %>;
   const minSlots = <%= @equipment.effective_min_slots %>;
@@ -109,7 +114,7 @@
    * Toggle slot selection with validation
    * Prevents selecting more than maxSlots
    */
-  function toggleSlot(el, slot) {
+  window.toggleSlot = function(el, slot) {
     const isSelected = selectedSlots.has(slot);
     
     if (isSelected) {
@@ -226,7 +231,7 @@
     btn.disabled = hasError;
   }
 
-  function confirmSelection() {
+  window.confirmSelection = function() {
     const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
     const startSlot = sorted[0];
     const endSlot = sorted[sorted.length - 1] + 1;
@@ -258,5 +263,6 @@
       btn.disabled = false;
       btn.textContent = 'Proceed to Book';
     });
-  }
+  };
+})();
 </script>
