@@ -33,6 +33,16 @@ module BookableResource
         return
       end
 
+      # Block booking past time slots for today (HKT = UTC+8)
+      hk_now = Time.now.utc + 8.hours
+      if date == hk_now.to_date
+        current_slot = hk_now.hour * 2 + (hk_now.min >= 30 ? 1 : 0)
+        if start_slot < current_slot
+          render json: { error: "Cannot book time slots that have already passed." }, status: :unprocessable_entity
+          return
+        end
+      end
+
       lock_token = BookingLockService.acquire_lock(
         user: current_user,
         resource: @resource,

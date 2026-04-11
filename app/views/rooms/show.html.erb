@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <meta name="turbo-visit-control" content="reload">
+<% end %>
+
 <h1><%= @room.name %></h1>
 <p style="color: #7f8c8d;">
   📍 <%= @room.building %> — <%= @room.location %> &nbsp;|&nbsp;
@@ -39,7 +43,7 @@
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #2ecc71; border-radius: 3px; vertical-align: middle;"></span> Available</span>
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #e74c3c; border-radius: 3px; vertical-align: middle;"></span> Occupied</span>
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #f39c12; border-radius: 3px; vertical-align: middle;"></span> Pending</span>
-  <span><span style="display: inline-block; width: 16px; height: 16px; background: #95a5a6; border-radius: 3px; vertical-align: middle;"></span> Locked</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #95a5a6; border-radius: 3px; vertical-align: middle;"></span> Past</span>
   <span><span style="display: inline-block; width: 16px; height: 16px; background: #3498db; border-radius: 3px; vertical-align: middle;"></span> Selected</span>
 </div>
 
@@ -55,7 +59,7 @@
            when :free then "#2ecc71"
            when :occupied then "#e74c3c"
            when :pending then "#f39c12"
-           when :locked then "#95a5a6"
+           when :past then "#95a5a6"
            else "#ccc"
            end
     %>
@@ -89,6 +93,7 @@
 </div>
 
 <script>
+(function() {
   const selectedSlots = new Set();
   const maxSlots = <%= @room.effective_max_slots %>;
   const minSlots = <%= @room.effective_min_slots %>;
@@ -102,7 +107,8 @@
     return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
   };
 
-  function toggleSlot(el, slot) {
+  // Expose toggleSlot globally so onclick attributes work
+  window.toggleSlot = function(el, slot) {
     const isSelected = selectedSlots.has(slot);
     
     if (isSelected) {
@@ -212,7 +218,8 @@
     btn.disabled = hasError;
   }
 
-  function confirmSelection() {
+  // Expose confirmSelection globally so onclick attributes work
+  window.confirmSelection = function() {
     const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
     const startSlot = sorted[0];
     const endSlot = sorted[sorted.length - 1] + 1;
@@ -244,5 +251,6 @@
       btn.disabled = false;
       btn.textContent = 'Proceed to Book';
     });
-  }
+  };
+})();
 </script>

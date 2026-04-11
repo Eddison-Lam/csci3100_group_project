@@ -21,7 +21,7 @@ class BookingsController < ApplicationController
     @end_slot = params[:end_slot].to_i
     @lock_token = params[:lock_token]
     @duration_slots = @end_slot - @start_slot
-    @total_cost = @duration_slots * @resource.price_per_unit
+    @total_cost = @duration_slots * @resource.price_per_unit.to_f
   end
 
   # Create the booking
@@ -64,8 +64,13 @@ class BookingsController < ApplicationController
   # Cancel booking
   def destroy
     if @booking.confirmed? || @booking.pending_payment?
+      previous_status = @booking.status
       @booking.update!(status: :cancelled)
-      @booking.clear_pending_bitmap if @booking.previous_changes.key?("status")
+      if previous_status == "confirmed"
+        @booking.clear_occupied_bitmap
+      elsif previous_status == "pending_payment"
+        @booking.clear_pending_bitmap
+      end
       redirect_to bookings_path, notice: "Booking cancelled."
     else
       redirect_to bookings_path, alert: "Cannot cancel this booking."
@@ -107,6 +112,15 @@ class BookingsController < ApplicationController
     @booking.clear_pending_bitmap
     BookingMailer.confirmation_email(@booking).deliver_later
     redirect_to booking_path(@booking), notice: "Payment successful! Booking confirmed."
+  end
+
+  # Release a booking lock (called via sendBeacon when user leaves confirm page)
+  def release_lock
+    lock_token = params[:lock_token]
+    if lock_token.present? && BookingLockService.validate_lock(lock_token, current_user.id)
+      BookingLockService.release_lock(lock_token)
+    end
+    head :no_content
   end
 
   private

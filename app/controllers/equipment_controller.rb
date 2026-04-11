@@ -1,10 +1,10 @@
-class EquipmentsController < ApplicationController
+class EquipmentController < ApplicationController
   include BookableResource  # include Concern
 
   before_action :authenticate_user!
 
   def index
-    @equipments = Equipment.filtered(filter_params)
+    @equipment = Equipment.filtered(filter_params)
     @departments = Department.active.order(:name)
   end
 
