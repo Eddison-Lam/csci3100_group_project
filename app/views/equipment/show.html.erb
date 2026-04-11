@@ -105,29 +105,82 @@
     return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
   };
 
+  /**
+   * Toggle slot selection with validation
+   * Prevents selecting more than maxSlots
+   */
   function toggleSlot(el, slot) {
-    if (selectedSlots.has(slot)) {
+    const isSelected = selectedSlots.has(slot);
+    
+    if (isSelected) {
+      // Deselecting is always allowed
       selectedSlots.delete(slot);
       el.style.background = '#2ecc71';
     } else {
+      // Check if we've reached the maximum slots before allowing selection
+      if (selectedSlots.size >= maxSlots) {
+        showError('Maximum ' + (maxSlots * 30) + ' minutes (' + maxSlots + ' slots) already selected.');
+        flashElement(el, '#e74c3c');
+        return; // Block selection
+      }
+      
       selectedSlots.add(slot);
       el.style.background = '#3498db';
     }
+    
     updateSummary();
   }
 
+  /**
+   * Display error message with auto-hide after 3 seconds
+   */
+  function showError(message) {
+    const errorEl = document.getElementById('sel-error');
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+  function hideError() {
+    const errorEl = document.getElementById('sel-error');
+    errorEl.style.display = 'none';
+  }
+  /**
+   * Flash element with color for visual feedback
+   */
+  function flashElement(el, color) {
+    const originalBg = el.style.background;
+    
+    // Apply flash color
+    el.style.background = color;
+    el.style.transition = 'background 0.2s';
+    
+    // Add shake animation
+    el.style.animation = 'shake 0.3s';
+    
+    // Restore original state after animation
+    setTimeout(() => {
+      el.style.background = originalBg;
+      el.style.animation = '';
+    }, 300);
+  }
+
+  /**
+   * Update selection summary and validate constraints
+   */
   function updateSummary() {
     const summary = document.getElementById('selection-summary');
     const errorEl = document.getElementById('sel-error');
-    errorEl.style.display = 'none';
 
     if (selectedSlots.size === 0) {
       summary.style.display = 'none';
+      hideError();
       return;
     }
+    
     summary.style.display = 'block';
 
     const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
+    
+    // Check if slots are contiguous (consecutive)
     let contiguous = true;
     for (let i = 1; i < sorted.length; i++) {
       if (sorted[i] !== sorted[i-1] + 1) { contiguous = false; break; }
@@ -137,6 +190,7 @@
     const endSlot = sorted[sorted.length - 1] + 1;
     const count = sorted.length;
 
+    // Update summary display
     document.getElementById('sel-start').textContent = slotToTime(startSlot);
     document.getElementById('sel-end').textContent = slotToTime(endSlot);
     document.getElementById('sel-duration').textContent = (count * 30) + ' minutes';
@@ -146,21 +200,30 @@
     }
 
     const btn = document.getElementById('btn-confirm');
+    let hasError = false;
+    
+    // Decoupling
     if (!contiguous) {
-      errorEl.textContent = 'Please select contiguous time slots.';
-      errorEl.style.display = 'block';
-      btn.disabled = true;
-    } else if (count > maxSlots) {
-      errorEl.textContent = 'Maximum ' + (maxSlots * 30) + ' minutes allowed.';
-      errorEl.style.display = 'block';
-      btn.disabled = true;
+      showError('Please select contiguous (consecutive) time slots.');
+      hasError = true;
+    } 
+    // Note: count > maxSlots should never happen due to toggleSlot blocking
+    // But keep this check as a safety net
+    else if (count > maxSlots) {
+      showError('Maximum ' + (maxSlots * 30) + ' minutes (' + maxSlots + ' slots) allowed.');
+      hasError = true;
     } else if (count < minSlots) {
-      errorEl.textContent = 'Minimum ' + (minSlots * 30) + ' minutes required.';
-      errorEl.style.display = 'block';
-      btn.disabled = true;
-    } else {
-      btn.disabled = false;
+      showError('Minimum ' + (minSlots * 30) + ' minutes (' + minSlots + ' slots) required.');
+      hasError = true;
+    } 
+    
+    
+    // Hide error if no validation issues
+    if (!hasError) {
+      hideError();
     }
+    
+    btn.disabled = hasError;
   }
 
   function confirmSelection() {

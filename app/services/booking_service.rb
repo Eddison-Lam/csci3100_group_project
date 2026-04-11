@@ -63,3 +63,4 @@ class BookingService
       booking.update_occupied_bitmap
     end
   end
+end
