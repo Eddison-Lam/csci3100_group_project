@@ -95,6 +95,7 @@
   const pricePerSlot = <%= @room.price_per_unit.to_f %>;
   const roomId = <%= @room.id %>;
   const dateStr = "<%= @date %>";
+  let flashTimeoutId = null;
   const slotToTime = (slot) => {
     const h = Math.floor(slot / 2);
     const m = (slot % 2) * 30;
@@ -133,12 +134,29 @@
   // visualization - red flash
   function flashElement(el, color) {
     const originalBg = el.style.background;
+    
+    // Clear previous timeout to prevent conflicts
+    if (flashTimeoutId !== null) {
+      clearTimeout(flashTimeoutId);
+    }
+    
+    // Apply flash color
     el.style.background = color;
     el.style.transition = 'background 0.2s';
     
-    setTimeout(() => {
+    // Add shake animation
+    el.style.animation = 'shake 0.3s';
+    
+    // Disable pointer events during animation
+    el.style.pointerEvents = 'none';
+    
+    // Set new timeout and store its ID
+    flashTimeoutId = setTimeout(() => {
       el.style.background = originalBg;
-    }, 200);
+      el.style.animation = '';
+      el.style.pointerEvents = 'auto';
+      flashTimeoutId = null; // Reset ID
+    }, 300);
   }
 
   function updateSummary() {
