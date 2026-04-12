@@ -7,7 +7,7 @@
 
 ## Additional Features
 
-- **Stripe (Mock Payment)**  
+- **Stripe (Mock Payment)**     (Trying to implement now: By Eddison, branch: Eddison/strip-mock-payment)
   - Reference from project spec: Some rooms or equipment may be charged  
   - Implement payment flow using Stripe in mock mode  
   - Handle charging logic during booking with success/failure processing
