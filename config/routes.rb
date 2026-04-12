@@ -2,10 +2,11 @@ Rails.application.routes.draw do
   devise_for :users
   get "up" => "rails/health#show", as: :rails_health_check
   namespace :admin do
-    resources :resources, only: [ :index ]
+    resources :resources, only: [ :index, :show ]
   end
 
   # Student-facing routes
+  resources :resources, only: [ :index, :show ]
   resources :rooms, only: [ :index, :show ] do
     member do
       get :availability  # AJAX endpoint for slot data
