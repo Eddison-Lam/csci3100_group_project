@@ -66,7 +66,7 @@ class ResourceAvailabilityService
     # Build final availability using redis.getbit for reliable bit reads
     results = []
 
-    @resource.effective_op_start.upto(@resource.effective_op_end) do |slot|
+    @resource.effective_op_start.upto(@resource.effective_op_end - 1) do |slot|
       status = :free
       mine   = false
 

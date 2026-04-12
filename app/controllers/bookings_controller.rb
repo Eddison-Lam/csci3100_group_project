@@ -20,8 +20,10 @@ class BookingsController < ApplicationController
     @start_slot = params[:start_slot].to_i
     @end_slot = params[:end_slot].to_i
     @lock_token = params[:lock_token]
-    @duration_slots = @end_slot - @start_slot
-    @total_cost = @duration_slots * @resource.price_per_unit.to_f
+    @booking = Booking.new(resource: @resource, start_slot: @start_slot, end_slot: @end_slot, booking_date: @date)
+    @duration_slots = @booking.duration_slots
+    @booking.send(:calculate_total_cost)
+    @total_cost = @booking.total_cost
   end
 
   # Create the booking

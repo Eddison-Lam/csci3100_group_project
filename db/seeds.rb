@@ -66,10 +66,10 @@ resources_data = [
 ]
 
 resources_data.each do |data|
-  resource = Resource.find_or_create_by!(name: data[:name], department_id: data[:department_id]) do |r|
-    r.assign_attributes(data)
-  end
-  puts "Inserted Resource: #{resource.name} (#{resource.type})"
+  resource = Resource.find_or_initialize_by(name: data[:name], department_id: data[:department_id])
+  resource.assign_attributes(data)
+  resource.save!
+  puts "#{resource.previously_new_record? ? 'Inserted' : 'Updated'} Resource: #{resource.name} (#{resource.type})"
 end
 
 puts "\n🎉 CUHK Seed success! \n   Departments: #{Department.count}\n   Resources: #{Resource.count} (Rooms: #{Room.count} | Equipments: #{Equipment.count})"
