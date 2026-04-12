@@ -78,3 +78,6 @@ gem "jsbundling-rails", "~> 1.3"
 
 # Authentication solution for Rails [https://github.com/heartcombo/devise]
 gem "devise"
+
+# mock payment
+gem "stripe"

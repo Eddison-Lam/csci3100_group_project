@@ -40,15 +40,27 @@
     <p style="color: #7f8c8d; font-size: 0.9em;">This is a simulated payment for demonstration purposes.</p>
   </div>
 
-  <div style="display: flex; gap: 10px;">
-    <%= button_to "Pay Now — $#{sprintf("%.2f", @booking.total_cost)}",
-          pay_booking_path(@booking),
-          method: :post,
-          style: "background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;" %>
+  <div style="display: flex; gap: 12px; margin-top: 20px;">
+    <% if @booking.pending_payment? && @booking.total_cost.to_f > 0 %>
+      <%= button_to "Pay Now — HK$#{sprintf("%.2f", @booking.total_cost)}",
+            pay_booking_path(@booking),
+            method: :post,
+            data: { turbo: false },
+            style: "background: #27ae60; color: white; border: none; padding: 14px 28px; border-radius: 6px; cursor: pointer; font-size: 1.15em; font-weight: bold;" %>
+    <% elsif @booking.total_cost.to_f == 0 %>
+      <span style="background: #27ae60; color: white; padding: 10px 20px; border-radius: 6px; font-weight: bold;">
+        Free Booking
+      </span>
+    <% end %>
 
-    <%= link_to "Cancel Booking", booking_path(@booking, _method: :delete),
-          data: { turbo_method: :delete, turbo_confirm: "Are you sure? Your booking will be cancelled." },
-          style: "background: #e74c3c; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center;" %>
+    <% if @booking.confirmed? || @booking.pending_payment? %>
+      <%= link_to "Cancel Booking", booking_path(@booking),
+            data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to cancel this booking?" },
+            style: "background: #e74c3c; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none;" %>
+    <% end %>
+
+    <%= link_to "Back to My Bookings", bookings_path,
+          style: "background: #95a5a6; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none;" %>
   </div>
 </div>
 
