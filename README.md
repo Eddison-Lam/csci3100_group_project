@@ -8,7 +8,8 @@ application up and running.
 Things you may want to cover:
 
 * Ruby version
-    ruby-4.0.1
+* ruby-4.0.1
+    
 
 * System dependencies
 
@@ -17,11 +18,14 @@ Things you may want to cover:
 * Database creation
 
 * Database initialization
-    In case of any new data, please run rails db:seed
+* In case of any new data, please run rails db:seed
+    
 
 * How to run the test suite
-    To run the cucumbers, "bundle exec cucumber"
-    To run a single cucumber test, "bundle exec cucumber features/#.feature"
+* To run the cucumbers, "bundle exec cucumber"
+* To run a single cucumber test, "bundle exec cucumber features/#.feature"
+    
+    
 
 * Services (job queues, cache servers, search engines, etc.)
 
