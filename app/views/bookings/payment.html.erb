@@ -41,10 +41,17 @@
   </div>
 
   <div style="display: flex; gap: 10px;">
-    <%= button_to "Pay Now — $#{sprintf("%.2f", @booking.total_cost)}",
-          pay_booking_path(@booking),
-          method: :post,
-          style: "background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;" %>
+    <% if @booking.pending_payment? && @booking.total_cost.to_f > 0 %>
+      <%= button_to "Pay Now — HK$#{sprintf("%.2f", @booking.total_cost)}",
+            pay_booking_path(@booking),
+            method: :post,
+            data: { turbo: false },
+            style: "background: #27ae60; color: white; border: none; padding: 14px 28px; border-radius: 6px; cursor: pointer; font-size: 1.15em; font-weight: bold;" %>
+    <% elsif @booking.total_cost.to_f == 0 %>
+      <span style="background: #27ae60; color: white; padding: 10px 20px; border-radius: 6px; font-weight: bold;">
+        Free Booking
+      </span>
+    <% end %>
 
     <%= link_to "Cancel Booking", booking_path(@booking, _method: :delete),
           data: { turbo_method: :delete, turbo_confirm: "Are you sure? Your booking will be cancelled." },
