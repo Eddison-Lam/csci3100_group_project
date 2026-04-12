@@ -90,7 +90,6 @@ class BookingsController < ApplicationController
       @booking.update!(status: :cancelled)
       @booking.clear_pending_bitmap
       redirect_to bookings_path, alert: "Payment window expired. Booking cancelled."
-      return
     end
   end
 

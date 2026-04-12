@@ -89,7 +89,10 @@
 
     // Release lock when leaving page (tab close, URL change, refresh)
     window.addEventListener('beforeunload', releaseLock);
-    // Release lock on Turbo navigation (internal link clicks, back button)
+    // Release lock on Turbo navigation (internal link clicks)
     document.addEventListener('turbo:before-visit', releaseLock);
+    // Release lock on back/forward navigation (Turbo restoration visits)
+    document.addEventListener('turbo:before-cache', releaseLock);
+    // Please work this time :(
   })();
 </script>

@@ -105,11 +105,33 @@
   const resourceId = <%= @equipment.id %>;
   const dateStr = "<%= @date %>";
   let flashTimeoutId = null;
+  let isReserving = false;
   const slotToTime = (slot) => {
     const h = Math.floor(slot / 2);
     const m = (slot % 2) * 30;
     return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
   };
+
+  // Reset state when page is restored from bfcache (browser back/forward)
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      selectedSlots.clear();
+      isReserving = false;
+      document.querySelectorAll('.slot-cell').forEach(function(cell) {
+        if (cell.dataset.available === 'true') {
+          cell.style.background = '#2ecc71';
+        }
+      });
+      var btn = document.getElementById('btn-confirm');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Proceed to Book';
+      }
+      var summary = document.getElementById('selection-summary');
+      if (summary) summary.style.display = 'none';
+      hideError();
+    }
+  });
 
   /**
    * Toggle slot selection with validation
@@ -240,9 +262,13 @@
     }
     
     btn.disabled = hasError;
+    btn.textContent = 'Proceed to Book';
+    isReserving = false;
   }
 
   window.confirmSelection = function() {
+    if (isReserving) return;
+    isReserving = true;
     const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
     const startSlot = sorted[0];
     const endSlot = sorted[sorted.length - 1] + 1;
