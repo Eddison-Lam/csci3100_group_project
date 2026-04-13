@@ -1,0 +1,106 @@
+<% content_for :head do %>
+  <meta name="turbo-visit-control" content="reload">
+<% end %>
+
+<h1><%= @room.name %></h1>
+<p style="color: #7f8c8d;">
+  📍 <%= @room.building %> — <%= @room.location %> &nbsp;|&nbsp;
+  👥 Capacity: <%= @room.capacity || "N/A" %> &nbsp;|&nbsp;
+  Hours: <%= @room.operating_hours_display %> &nbsp;|&nbsp;
+  <% if @room.price_per_unit.to_f > 0 %>
+    Price: $<%= @room.price_per_unit %>/slot (30 min)
+  <% else %>
+    <span style="color: #27ae60; font-weight: bold;">Free</span>
+  <% end %>
+</p>
+
+<!-- Date navigation -->
+<div style="display: flex; align-items: center; gap: 15px; margin: 20px 0;">
+  <% prev_date = @selected_date - 1.day %>
+  <% next_date = @selected_date + 1.day %>
+  <% max_date  = Date.current + @room.effective_advance_days.days %>
+
+  <% if prev_date >= Date.current %>
+    <%= link_to "← Previous Day",
+                admin_room_path(@room, date: prev_date),
+                style: "background: #ecf0f1; padding: 8px 16px; border-radius: 4px; text-decoration: none; color: #2c3e50;" %>
+  <% end %>
+
+  <h2 style="margin: 0;"><%= @selected_date.strftime("%A, %B %d, %Y") %></h2>
+
+  <% if next_date <= max_date %>
+    <%= link_to "Next Day →",
+                admin_room_path(@room, date: next_date),
+                style: "background: #ecf0f1; padding: 8px 16px; border-radius: 4px; text-decoration: none; color: #2c3e50;" %>
+  <% end %>
+
+  <form style="margin-left: auto;">
+    <input type="date" name="date" value="<%= @selected_date %>"
+           min="<%= Date.current %>" max="<%= max_date %>"
+           onchange="this.form.submit()"
+           style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+  </form>
+</div>
+
+<!-- Legend -->
+<div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 0.9em;">
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #2ecc71; border-radius: 3px; vertical-align: middle;"></span> Available</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #e74c3c; border-radius: 3px; vertical-align: middle;"></span> Occupied</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #f39c12; border-radius: 3px; vertical-align: middle;"></span> Pending</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #95a5a6; border-radius: 3px; vertical-align: middle;"></span> Past</span>
+</div>
+
+<!-- Slot grid with admin controls for existing bookings only -->
+<div id="slot-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 4px;">
+  <% @slots.each do |slot_data| %>
+    <% slot       = slot_data[:slot] %>
+    <% status     = slot_data[:status] %>
+    <% booking    = slot_data[:booking] %>
+    <% time_label = @room.slot_to_time(slot) %>
+
+    <% bg = if booking.present? && booking.pending_payment?
+              "#f39c12"  # Orange for pending payment
+            else
+              case status
+              when :free      then "#2ecc71"
+              when :occupied  then "#e74c3c"
+              when :pending   then "#f39c12"
+              when :past      then "#95a5a6"
+              else "#ccc"
+              end
+            end %>
+
+    <div class="slot-cell"
+         style="background: <%= bg %>; color: white; padding: 8px; text-align: center; border-radius: 4px; font-size: 0.8em;">
+      <div><strong><%= time_label %></strong></div>
+
+      <% if booking.present? %>
+        <div style="font-size: 0.75em; margin-top: 4px;">
+          <div><%= booking.user.email %></div>
+          <div>Current: <%= booking.status.humanize %></div>
+        </div>
+
+        <%= form_with model: [:admin, booking],
+                      url: admin_booking_path(booking),
+                      method: :patch,
+                      local: true,
+                      style: "margin-top: 4px; font-size: 0.75em;" do |f| %>
+          <% allowed_statuses = [:confirmed, :cancelled, :pending_payment, :no_show]
+             status_options = Booking.statuses.keys.select { |s| allowed_statuses.include?(s.to_sym) }
+                                                 .map { |s| [s.humanize, s] } %>
+          <%= f.select :status,
+                       status_options,
+                       {}, style: "width: 100%; font-size: 0.75em;" %>
+          <%= f.submit "Save",
+                       style: "margin-top: 2px; width: 100%; padding: 2px 4px; font-size: 0.75em;" %>
+        <% end %>
+
+        <%= button_to "Delete",
+                      admin_booking_path(booking),
+                      method: :delete,
+                      data: { turbo_confirm: "Delete this booking?" },
+                      style: "margin-top: 2px; width: 100%; padding: 2px 4px; font-size: 0.75em; background:#c0392b; color:white; border:none; border-radius:3px;" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
