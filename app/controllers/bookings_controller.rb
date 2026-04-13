@@ -82,18 +82,22 @@ class BookingsController < ApplicationController
 
   # Cancel booking
   def destroy
-    if @booking.confirmed? || @booking.pending_payment?
-      previous_status = @booking.status
-      @booking.update!(status: :cancelled)
-      if previous_status == "confirmed"
-        @booking.clear_occupied_bitmap
-      elsif previous_status == "pending_payment"
-        @booking.clear_pending_bitmap
+    # still not paid, just delete the record and release the lock (if any)
+    if @booking.status != "confirmed"
+      if params[:lock_token].present?
+        BookingLockService.release_lock(params[:lock_token])
       end
-      redirect_to bookings_path, notice: "Booking cancelled."
-    else
-      redirect_to bookings_path, alert: "Cannot cancel this booking."
+
+      @booking.destroy
+
+      redirect_to bookings_path, notice: "Booking has been cancelled and removed."
+      return
     end
+
+    # if paid, update status to cancelled and clear occupied bitmap
+    @booking.update!(status: :cancelled)
+    @booking.clear_occupied_bitmap
+    redirect_to bookings_path, notice: "Booking cancelled."
   end
 
   # Mock payment page
