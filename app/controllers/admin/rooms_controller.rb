@@ -1,6 +1,6 @@
 # app/controllers/admin/rooms_controller.rb
 class Admin::RoomsController < Admin::BaseController
-  before_action :set_room, only: [:show]
+  before_action :set_room, only: [ :show ]
 
   def index
     @rooms = Room.all
@@ -8,7 +8,8 @@ class Admin::RoomsController < Admin::BaseController
 
   def show
     @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
-    day_bookings  = @room.bookings.on_date(@selected_date).to_a
+    # Fetch all bookings except cancelled ones so admin can see and edit them
+    day_bookings  = @room.bookings.on_date(@selected_date).where.not(status: :cancelled).to_a
     service_slots = ResourceAvailabilityService
                       .new(@room)
                       .available_slots(@selected_date, current_user: current_user)

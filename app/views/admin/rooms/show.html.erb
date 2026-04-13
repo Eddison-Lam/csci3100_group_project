@@ -58,13 +58,17 @@
     <% booking    = slot_data[:booking] %>
     <% time_label = @room.slot_to_time(slot) %>
 
-    <% bg = case status
-           when :free      then "#2ecc71"
-           when :occupied  then "#e74c3c"
-           when :pending   then "#f39c12"
-           when :past      then "#95a5a6"
-           else "#ccc"
-           end %>
+    <% bg = if booking.present? && booking.pending_payment?
+              "#f39c12"  # Orange for pending payment
+            else
+              case status
+              when :free      then "#2ecc71"
+              when :occupied  then "#e74c3c"
+              when :pending   then "#f39c12"
+              when :past      then "#95a5a6"
+              else "#ccc"
+              end
+            end %>
 
     <div class="slot-cell"
          style="background: <%= bg %>; color: white; padding: 8px; text-align: center; border-radius: 4px; font-size: 0.8em;">
@@ -81,8 +85,11 @@
                       method: :patch,
                       local: true,
                       style: "margin-top: 4px; font-size: 0.75em;" do |f| %>
+          <% allowed_statuses = [:confirmed, :cancelled, :pending_payment, :no_show]
+             status_options = Booking.statuses.keys.select { |s| allowed_statuses.include?(s.to_sym) }
+                                                 .map { |s| [s.humanize, s] } %>
           <%= f.select :status,
-                       Booking.statuses.keys.map { |s| [s.humanize, s] },
+                       status_options,
                        {}, style: "width: 100%; font-size: 0.75em;" %>
           <%= f.submit "Save",
                        style: "margin-top: 2px; width: 100%; padding: 2px 4px; font-size: 0.75em;" %>
