@@ -22,10 +22,9 @@ Things you may want to cover:
     
 
 * How to run the test suite
-    * To run the cucumbers, "bundle exec cucumber"
-    * To run a single cucumber test, "bundle exec cucumber features/#.feature"
-    
-    
+    To run the cucumbers, "bundle exec cucumber"
+    To run a single cucumber test, "bundle exec cucumber features/#.feature"
+    To test stuff that is background job (such as mailing), run `bundle exec sidekiq` in a new terminal
 
 * Services (job queues, cache servers, search engines, etc.)
 
