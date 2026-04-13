@@ -61,6 +61,23 @@ class BookingsController < ApplicationController
 
   # Booking detail
   def show
+    if params[:payment_success] == "true" && @booking.stripe_session_id.present?
+      begin
+        stripe_session = Stripe::Checkout::Session.retrieve(@booking.stripe_session_id)
+
+        if stripe_session.payment_status == "paid"
+          @booking.update!(status: :confirmed, paid_at: Time.current)
+          @booking.update_occupied_bitmap
+          @booking.clear_pending_bitmap
+          BookingMailer.confirmation_email(@booking).deliver_later
+
+          @booking.update!(stripe_session_id: nil)
+          flash[:notice] = "Payment successful! Booking confirmed."
+        end
+      rescue Stripe::StripeError => e
+        flash[:alert] = "付款驗證失敗：#{e.message}"
+      end
+    end
   end
 
   # Cancel booking
@@ -90,7 +107,6 @@ class BookingsController < ApplicationController
       @booking.update!(status: :cancelled)
       @booking.clear_pending_bitmap
       redirect_to bookings_path, alert: "Payment window expired. Booking cancelled."
-      return
     end
   end
 
@@ -108,12 +124,33 @@ class BookingsController < ApplicationController
       return
     end
 
-    # Mock payment success
-    @booking.update!(status: :confirmed, paid_at: Time.current)
-    @booking.update_occupied_bitmap
-    @booking.clear_pending_bitmap
-    BookingMailer.confirmation_email(@booking).deliver_later
-    redirect_to booking_path(@booking), notice: "Payment successful! Booking confirmed."
+    session = Stripe::Checkout::Session.create(
+      payment_method_types: [ "card", "alipay", "wechat_pay" ],
+      line_items: [ {
+        price_data: {
+          currency: "hkd",
+          product_data: {
+            name: @booking.resource.name,
+            description: "Booking on #{@booking.booking_date.strftime('%Y-%m-%d')}"
+          },
+          unit_amount: (@booking.total_cost * 100).to_i
+        },
+        quantity: 1
+      } ],
+      mode: "payment",
+      success_url: booking_url(@booking) + "?payment_success=true",
+      cancel_url:  booking_url(@booking),
+      metadata: { booking_id: @booking.id },
+      payment_method_options: {
+        wechat_pay: {
+          client: "web"
+        }
+      }
+    )
+
+    @booking.update!(stripe_session_id: session.id)
+
+    redirect_to session.url, allow_other_host: true
   end
 
   # Release a booking lock (called via sendBeacon when user leaves confirm page)

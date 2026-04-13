@@ -60,7 +60,6 @@ group :development, :test do
   # Testing framework — required for >80% coverage grading
   gem "rspec-rails"
   gem "factory_bot_rails"
-
 end
 
 group :development do
@@ -82,3 +81,6 @@ gem "jsbundling-rails", "~> 1.3"
 
 # Authentication solution for Rails [https://github.com/heartcombo/devise]
 gem "devise"
+
+# Mock payment gem
+gem "stripe"
