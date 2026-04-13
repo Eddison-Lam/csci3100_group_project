@@ -26,8 +26,8 @@ services:
     working_dir: /app
     environment:
       DATABASE_HOST: db
-      DATABASE_PASSWORD: root   # ← from .env
-      DB_NAME: app_db                 # ← from .env
+      DATABASE_PASSWORD: ${DB_PASSWORD}   # ← from .env
+      DB_NAME: ${DB_NAME}                 # ← from .env
       REDIS_URL: ${REDIS_URL}
     depends_on:
       - db

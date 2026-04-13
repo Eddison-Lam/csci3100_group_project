@@ -7,7 +7,7 @@
 
 ## Additional Features
 
-- **Stripe (Mock Payment)**     (Trying to implement now: By Eddison, branch: Eddison/strip-mock-payment)
+- **Stripe (Mock Payment)**     (done)
   - Reference from project spec: Some rooms or equipment may be charged  
   - Implement payment flow using Stripe in mock mode  
   - Handle charging logic during booking with success/failure processing
@@ -16,7 +16,7 @@
   - Implement real-time notifications  
   - Includes booking status updates, cancellation alerts, waitlist changes, etc.
 
-- **SendGrid (Email)**  
+- **SendGrid (Email)**  (done)
   - Send email notifications via SendGrid  
   - Examples: booking confirmation emails, receipts, cancellation notices, waitlist alerts, etc.
 
