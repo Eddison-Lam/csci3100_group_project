@@ -1,0 +1,54 @@
+<h1>Browse Equipment</h1>
+
+<!-- Filters -->
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+  <%= form_with url: equipment_index_path, method: :get, local: true, style: "display: flex; gap: 15px; flex-wrap: wrap; align-items: end;" do %>
+    <div>
+      <label style="display: block; font-weight: bold; margin-bottom: 5px;">Department</label>
+      <%= select_tag :department_id,
+            options_from_collection_for_select(Department.where(is_active: true).order(:name), :id, :name, params[:department_id]),
+            include_blank: "All Departments",
+            style: "padding: 8px; border-radius: 4px; border: 1px solid #ccc;" %>
+    </div>
+    <div>
+      <%= submit_tag "Search", style: "background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;" %>
+    </div>
+  <% end %>
+</div>
+
+<!-- Equipment List -->
+<% if @equipment.any? %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+    <% @equipment.each do |eq| %>
+      <%= link_to equipment_path(eq), style: "text-decoration: none; color: inherit;" do %>
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: white; transition: box-shadow 0.2s; cursor: pointer;"
+             onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+             onmouseout="this.style.boxShadow='none'">
+          <h3 style="margin: 0 0 8px; color: #2c3e50;"><%= eq.name %></h3>
+          <% if eq.description.present? %>
+            <p style="margin: 4px 0; color: #7f8c8d;"><%= truncate(eq.description, length: 80) %></p>
+          <% end %>
+          <p style="margin: 4px 0; color: #7f8c8d;">
+            📦 Quantity: <%= eq.quantity || 1 %>
+            &nbsp;|&nbsp;
+            Dept: <%= eq.department&.name || "N/A" %>
+          </p>
+          <p style="margin: 4px 0;">
+            <% if eq.price_per_unit.to_f > 0 %>
+              <span style="background: #e67e22; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">
+                $<%= eq.price_per_unit %>/slot
+              </span>
+            <% else %>
+              <span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">Free</span>
+            <% end %>
+          </p>
+          <p style="margin: 4px 0; color: #95a5a6; font-size: 0.9em;">
+            Hours: <%= eq.operating_hours_display %>
+          </p>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% else %>
+  <p style="color: #7f8c8d; font-style: italic;">No equipment found.</p>
+<% end %>

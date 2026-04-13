@@ -1,0 +1,256 @@
+<% content_for :head do %>
+  <meta name="turbo-visit-control" content="reload">
+<% end %>
+
+<h1><%= @room.name %></h1>
+<p style="color: #7f8c8d;">
+  📍 <%= @room.building %> — <%= @room.location %> &nbsp;|&nbsp;
+  👥 Capacity: <%= @room.capacity || "N/A" %> &nbsp;|&nbsp;
+  Hours: <%= @room.operating_hours_display %> &nbsp;|&nbsp;
+  <% if @room.price_per_unit.to_f > 0 %>
+    Price: $<%= @room.price_per_unit %>/slot (30 min)
+  <% else %>
+    <span style="color: #27ae60; font-weight: bold;">Free</span>
+  <% end %>
+</p>
+
+<!-- Date navigation -->
+<div style="display: flex; align-items: center; gap: 15px; margin: 20px 0;">
+  <% prev_date = @date - 1.day %>
+  <% next_date = @date + 1.day %>
+  <% max_date = Date.current + @room.effective_advance_days.days %>
+
+  <% if prev_date >= Date.current %>
+    <%= link_to "← Previous Day", room_path(@room, date: prev_date), style: "background: #ecf0f1; padding: 8px 16px; border-radius: 4px; text-decoration: none; color: #2c3e50;" %>
+  <% end %>
+
+  <h2 style="margin: 0;"><%= @date.strftime("%A, %B %d, %Y") %></h2>
+
+  <% if next_date <= max_date %>
+    <%= link_to "Next Day →", room_path(@room, date: next_date), style: "background: #ecf0f1; padding: 8px 16px; border-radius: 4px; text-decoration: none; color: #2c3e50;" %>
+  <% end %>
+
+  <form style="margin-left: auto;">
+    <input type="date" name="date" value="<%= @date %>"
+           min="<%= Date.current %>" max="<%= max_date %>"
+           onchange="this.form.submit()"
+           style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+  </form>
+</div>
+
+<!-- Slot selection legend -->
+<div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 0.9em;">
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #2ecc71; border-radius: 3px; vertical-align: middle;"></span> Available</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #e74c3c; border-radius: 3px; vertical-align: middle;"></span> Occupied</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #f39c12; border-radius: 3px; vertical-align: middle;"></span> Pending</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #95a5a6; border-radius: 3px; vertical-align: middle;"></span> Past</span>
+  <span><span style="display: inline-block; width: 16px; height: 16px; background: #3498db; border-radius: 3px; vertical-align: middle;"></span> Selected</span>
+</div>
+
+<!-- Slot grid -->
+<div id="slot-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 4px;">
+  <% @slots.each do |slot_data| %>
+    <% slot = slot_data[:slot] %>
+    <% status = slot_data[:status] %>
+    <% available = slot_data[:available] %>
+    <% time_label = @room.slot_to_time(slot) %>
+    <%
+      bg = case status
+           when :free then "#2ecc71"
+           when :occupied then "#e74c3c"
+           when :pending then "#f39c12"
+           when :past then "#95a5a6"
+           else "#ccc"
+           end
+    %>
+    <div class="slot-cell"
+         data-slot="<%= slot %>"
+         data-available="<%= available %>"
+         style="background: <%= bg %>; color: white; padding: 8px; text-align: center; border-radius: 4px; font-size: 0.85em;
+                <%= "cursor: pointer;" if available %>"
+         <% if available %>
+           onclick="toggleSlot(this, <%= slot %>)"
+         <% end %>>
+      <%= time_label %>
+    </div>
+  <% end %>
+</div>
+
+<!-- Selection summary & confirm -->
+<div id="selection-summary" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;">
+  <h3>Selected Time Slots</h3>
+  <p>From: <strong id="sel-start"></strong> To: <strong id="sel-end"></strong></p>
+  <p>Duration: <strong id="sel-duration"></strong></p>
+  <% if @room.price_per_unit.to_f > 0 %>
+    <p>Estimated Cost: <strong id="sel-cost"></strong></p>
+  <% else %>
+    <p style="color: #27ae60; font-weight: bold;">Free</p>
+  <% end %>
+  <p id="sel-error" style="color: #e74c3c; display: none;"></p>
+  <button id="btn-confirm" onclick="confirmSelection()" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 1em;">
+    Proceed to Book
+  </button>
+</div>
+
+<script>
+(function() {
+  const selectedSlots = new Set();
+  const maxSlots = <%= @room.effective_max_slots %>;
+  const minSlots = <%= @room.effective_min_slots %>;
+  const pricePerSlot = <%= @room.price_per_unit.to_f %>;
+  const roomId = <%= @room.id %>;
+  const dateStr = "<%= @date %>";
+  let flashTimeoutId = null;
+  const slotToTime = (slot) => {
+    const h = Math.floor(slot / 2);
+    const m = (slot % 2) * 30;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  };
+
+  // Expose toggleSlot globally so onclick attributes work
+  window.toggleSlot = function(el, slot) {
+    const isSelected = selectedSlots.has(slot);
+    
+    if (isSelected) {
+      selectedSlots.delete(slot);
+      el.style.background = '#2ecc71';
+    } else {
+      if (selectedSlots.size >= maxSlots) {
+        showError('Maximum ' + (maxSlots * 30) + ' minutes (' + maxSlots + ' slots) already selected.');
+        flashElement(el, '#e74c3c');
+        return;
+      }
+      selectedSlots.add(slot);
+      el.style.background = '#3498db';
+    }
+    updateSummary();
+  }
+
+  function showError(message) {
+    const errorEl = document.getElementById('sel-error');
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+
+  function hideError() {
+    const errorEl = document.getElementById('sel-error');
+    errorEl.style.display = 'none';
+  }
+
+  // visualization - red flash
+  function flashElement(el, color) {
+    const originalBg = el.style.background;
+    
+    // Clear previous timeout to prevent conflicts
+    if (flashTimeoutId !== null) {
+      clearTimeout(flashTimeoutId);
+    }
+    
+    // Apply flash color
+    el.style.background = color;
+    el.style.transition = 'background 0.2s';
+    
+    // Add shake animation
+    el.style.animation = 'shake 0.3s';
+    
+    // Disable pointer events during animation
+    el.style.pointerEvents = 'none';
+    
+    // Set new timeout and store its ID
+    flashTimeoutId = setTimeout(() => {
+      el.style.background = originalBg;
+      el.style.animation = '';
+      el.style.pointerEvents = 'auto';
+      flashTimeoutId = null; // Reset ID
+    }, 300);
+  }
+
+  function updateSummary() {
+    const summary = document.getElementById('selection-summary');
+    const errorEl = document.getElementById('sel-error');
+    errorEl.style.display = 'none';
+
+    if (selectedSlots.size === 0) {
+      summary.style.display = 'none';
+      hideError();
+      return;
+    }
+    summary.style.display = 'block';
+
+    const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
+    // Check contiguous
+    let contiguous = true;
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] !== sorted[i-1] + 1) { contiguous = false; break; }
+    }
+
+    const startSlot = sorted[0];
+    const endSlot = sorted[sorted.length - 1] + 1;
+    const count = sorted.length;
+
+    document.getElementById('sel-start').textContent = slotToTime(startSlot);
+    document.getElementById('sel-end').textContent = slotToTime(endSlot);
+    document.getElementById('sel-duration').textContent = (count * 30) + ' minutes';
+
+    if (pricePerSlot > 0) {
+      document.getElementById('sel-cost').textContent = '$' + (count * pricePerSlot).toFixed(2);
+    }
+
+    const btn = document.getElementById('btn-confirm');
+    // Decoupling
+    let hasError= false
+    if (!contiguous) {
+      showError('Please select contiguous (consecutive) time slots.');
+      hasError = true;
+    } 
+    // Note: count > maxSlots should never happen due to toggleSlot blocking
+    else if (count > maxSlots) {
+      showError('Maximum ' + (maxSlots * 30) + ' minutes (' + maxSlots + ' slots) allowed.');
+      hasError = true;
+    } else if (count < minSlots) {
+      showError('Minimum ' + (minSlots * 30) + ' minutes (' + minSlots + ' slots) required.');
+      hasError = true;
+    } 
+    // If no error, hide error message
+    if (!hasError) {
+      hideError();
+    }
+    btn.disabled = hasError;
+  }
+
+  // Expose confirmSelection globally so onclick attributes work
+  window.confirmSelection = function() {
+    const sorted = Array.from(selectedSlots).sort((a, b) => a - b);
+    const startSlot = sorted[0];
+    const endSlot = sorted[sorted.length - 1] + 1;
+    const btn = document.getElementById('btn-confirm');
+    btn.disabled = true;
+    btn.textContent = 'Reserving...';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    fetch('/rooms/' + roomId + '/availability?date=' + dateStr +
+          '&start_slot=' + startSlot + '&end_slot=' + endSlot, {
+      headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrfToken }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.lock_token) {
+        window.location.href = '/bookings/new?resource_id=' + roomId +
+                                '&date=' + dateStr +
+                                '&start_slot=' + startSlot +
+                                '&end_slot=' + endSlot +
+                                '&lock_token=' + encodeURIComponent(data.lock_token);
+      } else {
+        alert(data.error || 'Failed to reserve slots. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Proceed to Book';
+      }
+    })
+    .catch(() => {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Proceed to Book';
+    });
+  };
+})();
+</script>

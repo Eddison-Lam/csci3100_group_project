@@ -26,14 +26,15 @@ services:
     working_dir: /app
     environment:
       DATABASE_HOST: db
-      DATABASE_PASSWORD: ${DB_PASSWORD}
+      DATABASE_PASSWORD: root   # ← from .env
+      DB_NAME: app_db                 # ← from .env
       REDIS_URL: redis://redis:6379/0
     depends_on:
       - db
-      - redis 
+      - redis
     ports:
-      - "${EXTERNAL_WEB_PORT:-3000}:3000" 
-    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+      - "${EXTERNAL_WEB_PORT:-3000}:3000"
+    command: sh -c "rm -f /app/tmp/pids/server.pid && bundle exec rails db:prepare && bundle exec rails server -b 0.0.0.0 -p 3000"
     stdin_open: true
     tty: true
 

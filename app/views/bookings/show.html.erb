@@ -1,0 +1,78 @@
+<h1>Booking Details</h1>
+
+<div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 25px; max-width: 600px;">
+  <% status_bg = case @booking.status
+                 when "confirmed" then "#27ae60"
+                 when "pending_payment" then "#f39c12"
+                 when "cancelled" then "#e74c3c"
+                 when "no_show" then "#95a5a6"
+                 else "#7f8c8d"
+                 end %>
+  <span style="background: <%= status_bg %>; color: white; padding: 4px 12px; border-radius: 4px; font-size: 0.9em; float: right;">
+    <%= @booking.status.titleize %>
+  </span>
+
+  <h2 style="margin-top: 0; color: #2c3e50;"><%= @booking.resource.name %></h2>
+
+  <table style="width: 100%; margin-bottom: 20px;">
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Type:</td>
+      <td style="padding: 8px 0;"><%= @booking.resource.type %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Date:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @booking.booking_date.strftime("%A, %B %d, %Y") %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Time:</td>
+      <td style="padding: 8px 0; font-weight: bold;"><%= @booking.time_range_display %></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Duration:</td>
+      <td style="padding: 8px 0;"><%= @booking.duration_minutes %> minutes</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Purpose:</td>
+      <td style="padding: 8px 0;"><%= @booking.purpose %></td>
+    </tr>
+    <% if @booking.notes.present? %>
+      <tr>
+        <td style="padding: 8px 0; color: #7f8c8d;">Notes:</td>
+        <td style="padding: 8px 0;"><%= @booking.notes %></td>
+      </tr>
+    <% end %>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Cost:</td>
+      <td style="padding: 8px 0;">
+        <% if @booking.total_cost.to_f > 0 %>
+          $<%= sprintf("%.2f", @booking.total_cost) %>
+          <% if @booking.paid_at %>
+            <span style="color: #27ae60;">(Paid at <%= @booking.paid_at.strftime("%H:%M, %b %d") %>)</span>
+          <% end %>
+        <% else %>
+          <span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 4px;">Free</span>
+        <% end %>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #7f8c8d;">Booked at:</td>
+      <td style="padding: 8px 0;"><%= @booking.created_at.strftime("%H:%M, %b %d, %Y") %></td>
+    </tr>
+  </table>
+
+  <div style="display: flex; gap: 10px;">
+    <% if @booking.pending_payment? %>
+      <%= link_to "Complete Payment", payment_booking_path(@booking),
+            style: "background: #e67e22; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none;" %>
+    <% end %>
+
+    <% if @booking.confirmed? || @booking.pending_payment? %>
+      <%= link_to "Cancel Booking", booking_path(@booking),
+            data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to cancel this booking?" },
+            style: "background: #e74c3c; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none;" %>
+    <% end %>
+
+    <%= link_to "Back to My Bookings", bookings_path,
+          style: "background: #95a5a6; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none;" %>
+  </div>
+</div>
