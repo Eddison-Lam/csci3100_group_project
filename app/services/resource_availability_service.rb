@@ -18,6 +18,12 @@ class ResourceAvailabilityService
     service.set_occupied_slots(date, slots.min, slots.max + 1)
   end
 
+  def self.update_pending_bitmap(resource_id, date, slots)
+    resource = Resource.find(resource_id)
+    service  = new(resource)
+    service.set_pending_slots(date, slots.min, slots.max + 1)
+  end
+
   def self.clear_pending_bitmap(resource_id, date, slots)
     resource = Resource.find(resource_id)
     service  = new(resource)
