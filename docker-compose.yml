@@ -28,7 +28,7 @@ services:
       DATABASE_HOST: db
       DATABASE_PASSWORD: root   # ← from .env
       DB_NAME: app_db                 # ← from .env
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: ${REDIS_URL}
     depends_on:
       - db
       - redis

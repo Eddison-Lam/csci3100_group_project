@@ -75,7 +75,7 @@ class BookingsController < ApplicationController
           flash[:notice] = "Payment successful! Booking confirmed."
         end
       rescue Stripe::StripeError => e
-        flash[:alert] = "付款驗證失敗：#{e.message}"
+        flash[:alert] = "Payment failed: #{e.message}"
       end
     end
   end
@@ -145,7 +145,8 @@ class BookingsController < ApplicationController
         wechat_pay: {
           client: "web"
         }
-      }
+      },
+      customer_email: @booking.user.email
     )
 
     @booking.update!(stripe_session_id: session.id)
