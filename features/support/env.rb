@@ -1,8 +1,8 @@
 require "cucumber/rails"
-require "factory_bot"
-require_relative "factories"
+require "devise"
 
 World(FactoryBot::Syntax::Methods)
+World(Warden::Test::Helpers)
 
 DatabaseCleaner.strategy = :truncation
 Around do |_scenario, block|

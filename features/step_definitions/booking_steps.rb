@@ -258,9 +258,9 @@ def find_element_by_name(name)
 end
 
 def select_slots(resource, start_time, end_time)
-  # Implement based on your UI: checkboxes for each half-hour slot
+  # Updated for clickable slot divs
   times = generate_slots(start_time, end_time)
-  times.each { |t| check "slot_#{resource.id}_#{t}" }
+  times.each { |t| click_on t }
 end
 
 def generate_slots(start_str, end_str)

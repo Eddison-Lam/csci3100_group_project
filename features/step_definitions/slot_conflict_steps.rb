@@ -211,15 +211,13 @@ Then("I should see a warning {string}") do |message|
   expect(page).to have_content(message)
 end
 
-@locked_slots = { resource: resource.name, start: start_time, end: end_time }
 Then("other users should see those slots as available") do
   # This step assumes we are already logged in as another user.
-  # It also assumes that the previously locked slots are stored in @locked_slots
-  # (set in the step that created the lock). If not, you can hardcode a fallback.
-  if @locked_slots
-    step "the slots from \"#{@locked_slots[:start]}\" to \"#{@locked_slots[:end]}\" for \"#{@locked_slots[:resource]}\" should show as \"Available\""
+  # We use the @lock variable (if it exists) to find the details
+  if @lock
+    step "the slots from \"#{@lock.start_time.strftime("%H:%M")}\" to \"#{@lock.end_time.strftime("%H:%M")}\" for \"#{@lock.resource.name}\" should show as \"Available\""
   else
-    # fallback for the specific scenario in the feature
+    # Fallback if @lock wasn't set in a previous step
     step "the slots from \"10:00\" to \"12:00\" for \"Room X\" should show as \"Available\""
   end
 end

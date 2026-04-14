@@ -23,4 +23,18 @@ FactoryBot.define do
       quantity { 5 }
     end
   end
+
+  factory :room, parent: :resource do
+    type { "Room" }
+    building { "Science Centre" }
+    location { "2/F Room 201" }
+    capacity { 30 }
+  end
+
+  factory :equipment, parent: :resource do
+    type { "Equipment" }
+    building { nil }
+    location { nil }
+    quantity { 5 }
+  end
 end
