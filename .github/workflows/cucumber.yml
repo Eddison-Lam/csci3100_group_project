@@ -26,14 +26,14 @@ jobs:
           - 6379:6379
         options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      env:
-        RAILS_ENV: test
-        DATABASE_HOST: 127.0.0.1
-        DB_PASSWORD: root
-        DB_NAME: app_db
-        REDIS_URL: redis://localhost:6379/0
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-        ACTION_MAILER_DELIVERY_METHOD: test   
+    # ↓ env is at job level, NOT inside services
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: 127.0.0.1
+      DB_PASSWORD: root
+      DB_NAME: app_db
+      REDIS_URL: redis://localhost:6379/0
+      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
 
     steps:
       - name: Checkout code
@@ -47,9 +47,6 @@ jobs:
         with:
           ruby-version: '3.3'
           bundler-cache: true
-      - name: Debug Rails boot
-        run: bundle exec rails runner "puts 'OK'" --trace 2>&1
-        continue-on-error: true
 
       - name: Set up database
         run: |
