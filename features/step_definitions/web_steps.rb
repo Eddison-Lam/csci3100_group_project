@@ -62,6 +62,10 @@ Then("I should not see {string}") do |text|
   expect(page).to have_no_content(text)
 end
 
+Then("I should not see the {string}") do |text|
+  expect(page).to have_no_content(text)
+end
+
 Then("I should be on the {string} page") do |page_name|
   expect(current_path).to eq(path_to(page_name))
 end
@@ -159,7 +163,7 @@ When("I select slots from {string} to {string}") do |start_time_str, end_time_st
   current_time = start_time
   while current_time < end_time
     slot_div = find("[data-slot='#{start_slot}']", visible: :all)
-    click_on slot_div if slot_div
+    slot_div.click if slot_div
     start_slot += 1
     current_time += 30.minutes
   end

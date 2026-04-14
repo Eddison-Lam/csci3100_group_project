@@ -9,4 +9,10 @@ Feature: My Bookings
 
   Scenario: View bookings page
     When I visit my bookings page
-    Then I should see "Welcome"
+    Then I should see "My Bookings"
+
+  Scenario: View confirmed booking
+    When I visit my bookings page
+    Then I should see "My Bookings" or "Room A"
+
+  

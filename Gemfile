@@ -72,7 +72,8 @@ group :test do
   gem "selenium-webdriver"
   gem "cucumber-rails", require: false
   gem "database_cleaner-active_record"
-  gem 'webmock'
+  gem "webmock"
+  gem "simplecov", require: false
 end
 
 

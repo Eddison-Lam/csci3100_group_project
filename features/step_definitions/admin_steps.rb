@@ -22,14 +22,6 @@ When("I visit the admin resources page") do
   visit admin_resources_path
 end
 
-When("I select {string} from {string}") do |option, dropdown|
-  select option, from: dropdown
-end
-
-When("I fill in {string} with {string}") do |field, value|
-  fill_in field, with: value
-end
-
 When("I check {string}") do |field|
   check field
 end
@@ -51,6 +43,10 @@ When("I click {string} for {string}") do |link, resource_name|
   within(find_element_by_name(resource_name)) do
     click_link link
   end
+end
+
+When("I visit the daily summary page") do
+  visit admin_daily_summary_path
 end
 
 Then("I should see {string} per slot") do |price|
