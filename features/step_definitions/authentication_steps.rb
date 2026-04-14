@@ -16,7 +16,7 @@ Given("an activated admin {string} exists in department {string}") do |email, de
 end
 
 Given("I am logged in as a student") do
-  @current_user = create(:user, :student, password: "password123")
+  @current_user = create(:user, :student, student_id: "S12345678", password: "password123")
   login_as(@current_user, scope: :user)
 end
 

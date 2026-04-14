@@ -47,6 +47,7 @@
             <%= button_to "Log Out", destroy_user_session_path,
                   method: :delete,
                   form: { data: { turbo: false } },
+                  data: { test_id: "logout-button" },
                   style: "background: #e74c3c; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; width: 100%;" %>
           </nav>
         <% else %>
