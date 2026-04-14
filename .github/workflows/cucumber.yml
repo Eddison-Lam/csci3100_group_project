@@ -47,7 +47,12 @@ jobs:
         with:
           ruby-version: '3.3'
           bundler-cache: true
-
+      - name: Debug boot
+        run: |
+          echo "=== Checking RAILS_MASTER_KEY length ==="
+          echo -n "$RAILS_MASTER_KEY" | wc -c
+          echo "=== Testing Rails boot ==="
+          bundle exec rails runner "puts 'Boot OK'" 2>&1 || true
       - name: Set up database
         run: |
           bin/rails db:create
