@@ -14,4 +14,4 @@ RUN bundle install
 
 COPY . .
 
-CMD ["sh", "-c", "bundle exec rails db:migrate && bundle exec sidekiq & bundle exec rails server -b 0.0.0.0"]
+CMD ["sh", "-c", "bundle exec rails server -b 0.0.0.0 -p ${PORT}"]
