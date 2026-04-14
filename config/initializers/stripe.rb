@@ -1,3 +1,4 @@
-Rails.application.credentials.stripe => config
-
-Stripe.api_key = config[:secret_key]
+unless Rails.env.test?
+  config = Rails.application.credentials.stripe
+  Stripe.api_key = config[:secret_key]
+end
