@@ -1,4 +1,5 @@
 Rails.application.configure do
+  next if Rails.env.test?
   config.action_mailer.delivery_method = :smtp
 
   config.action_mailer.smtp_settings = {

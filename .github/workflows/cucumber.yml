@@ -26,14 +26,14 @@ jobs:
           - 6379:6379
         options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-    env:
-      RAILS_ENV: test
-      # Match your .env variable names exactly
-      DATABASE_HOST: 127.0.0.1        # 'db' in docker-compose → 127.0.0.1 in CI
-      DB_PASSWORD: root
-      DB_NAME: app_db
-      REDIS_URL: redis://localhost:6379/0   # 'redis' hostname → localhost in CI
-      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      env:
+        RAILS_ENV: test
+        DATABASE_HOST: 127.0.0.1
+        DB_PASSWORD: root
+        DB_NAME: app_db
+        REDIS_URL: redis://localhost:6379/0
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        ACTION_MAILER_DELIVERY_METHOD: test   
 
     steps:
       - name: Checkout code
