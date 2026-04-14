@@ -35,8 +35,6 @@ Feature: Slot Availability
     Then the lock should be released
     And a confirmed booking should exist for those slots
 
-  # Race Condition - Two Users Try to Book Same Slots
-
   Scenario: First user to click confirm gets the lock
     Given User A selects slots from "10:00" to "12:00" for "Room X" tomorrow
     And User B selects the same slots
@@ -62,8 +60,6 @@ Feature: Slot Availability
     When User B visits the rooms page
     Then the slots from "10:00" to "12:00" should be disabled for User B
 
-  # Final Submission Validation
-
   Scenario: System validates lock ownership before creating booking
     Given User A has a lock on "Room X" slots "10:00"-"12:00"
     When User A submits the booking
@@ -84,8 +80,6 @@ Feature: Slot Availability
     Then only one booking should succeed
     And the other should see "Time slot conflicts with existing booking"
 
-  # Multiple Concurrent Users
-
   Scenario: Different users can lock different time slots simultaneously
     Given User A locks "Room X" slots "10:00"-"12:00"
     When User B selects slots "14:00"-"16:00" for "Room X"
@@ -100,8 +94,6 @@ Feature: Slot Availability
     When another user books slots from "11:00" to "12:00"
     And I refresh the page
     Then the slots from "11:00" to "12:00" for "Room X" should be disabled
-
-  # Lock Visibility
 
   Scenario: User sees their own lock as selected
     Given I am on the booking confirmation page for "Room X" tomorrow "10:00"-"12:00"

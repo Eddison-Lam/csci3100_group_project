@@ -124,10 +124,6 @@ When("I click {string} for the booking by {string}") do |action, student_name|
   end
 end
 
-When("I fill in {string} with {string}") do |field, value|
-  fill_in field, with: value
-end
-
 When("I check {string}") do |field|
   check field
 end
@@ -246,12 +242,14 @@ def find_resource(name)
 end
 
 def find_element_by_name(name)
-  # Find a container that likely holds the resource info (e.g., a card or row)
-  find(:xpath, "//*[contains(text(), '#{name}')]/ancestor::div[contains(@class, 'card') or contains(@class, 'row')]")
+  # Find the element that contains the room name (exact match) and then return its closest ancestor div
+  find(:xpath, "//*[normalize-space()='#{name}']/ancestor::div[1]")
+rescue Capybara::ElementNotFound
+  # Fallback: any element containing the name, then take its parent container
+  find(:xpath, "//*[contains(text(), '#{name}')]/ancestor::*[1]")
 end
 
 def select_slots(resource, start_time, end_time)
-  # Updated for clickable slot divs
   times = generate_slots(start_time, end_time)
   times.each { |t| click_on t }
 end

@@ -1,11 +1,10 @@
 Given("the following equipment exists:") do |table|
   table.hashes.each do |row|
-    department = Department.find_by(name: row["department"])
+    department = Department.find_by(name: row["department"]) || create(:department, name: row["department"])
     create(:equipment,
       name: row["name"],
       department: department,
       quantity: row["quantity"].to_i,
-      equipment_type: row["equipment_type"],
       price_per_unit: row["price_per_unit"].to_f
     )
   end
@@ -13,13 +12,24 @@ end
 
 Given("the equipment {string} has 0 available quantity today") do |equipment_name|
   equipment = Equipment.find_by(name: equipment_name)
-  # Mock availability for a specific date; adjust as needed
-  allow_any_instance_of(Equipment).to receive(:available_quantity_on).and_return(0)
+  future_date = Date.today + 1.day
+  user = User.first || create(:user)
+  # Create bookings to exhaust availability
+  equipment.quantity.times do |i|
+    create(:booking,
+      resource: equipment,
+      booking_date: future_date,
+      status: :confirmed,
+      start_slot: 16,
+      end_slot: 18,
+      user: user
+    )
+  end
 end
 
 Given("the equipment {string} is inactive") do |equipment_name|
   equipment = Equipment.find_by(name: equipment_name)
-  equipment.update!(active: false)
+  equipment.update!(is_active: false)
 end
 
 Given("an equipment {string} exists in {string} with price_per_unit {float}") do |equipment_name, dept_name, price|

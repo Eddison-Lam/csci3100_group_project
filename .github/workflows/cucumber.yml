@@ -42,11 +42,12 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3'
-          bundler-cache: true
+          ruby-version: '4.0.1' # Match your local Ruby version
+          bundler-cache: true # Caches gems automatically
 
-      - name: Set up database
-        run: bin/rails db:prepare
+      - name: Set up Database
+        run: |
+          bin/rails db:prepare
 
       - name: Run Cucumber tests
         run: bundle exec cucumber features/
