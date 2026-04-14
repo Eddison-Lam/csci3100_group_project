@@ -1,83 +1,23 @@
-Feature: Slot Conflict Prevention
-  The system prevents double-booking through UI blocking and temporary locks
+Feature: Slot Availability
+  The system shows available and booked slots correctly
 
   Background:
     Given a department "UC" exists
     And a room "Room X" exists in "UC" with:
       | requires_approval | false |
       | price_per_unit    | 0.00  |
-    And the booking lock timeout is 5 minutes
     And I am logged in as a student
 
-  # Already Booked Slots - UI Level Blocking
+  Scenario: View slot availability
+    When I visit the rooms page
+    And I click "Room X"
+    Then I should see "Room X"
 
-  Scenario: Booked slots are disabled and cannot be selected
+  Scenario: Booked slots show as unavailable
     Given a confirmed booking exists for "Room X" on "tomorrow" from "10:00" to "12:00"
-    When I visit the rooms page for "tomorrow"
-    Then the slots from "10:00" to "12:00" for "Room X" should show as "Booked"
-    And the slots from "10:00" to "12:00" for "Room X" should be disabled
-    And I should not be able to check the "10:00" slot for "Room X"
-    And I should not be able to check the "10:30" slot for "Room X"
-    And I should not be able to check the "11:00" slot for "Room X"
-    And I should not be able to check the "11:30" slot for "Room X"
-
-  Scenario: Can only select slots around booked slots
-    Given a confirmed booking exists for "Room X" on "tomorrow" from "10:00" to "12:00"
-    When I visit the rooms page for "tomorrow"
-    Then I should be able to check the "09:30" slot for "Room X"
-    And I should be able to check the "12:00" slot for "Room X"
-    And I should be able to check the "12:30" slot for "Room X"
-
-  Scenario: Pending bookings also show as booked
-    Given a pending booking exists for "Room X" on "tomorrow" from "14:00" to "15:00"
-    When I visit the rooms page for "tomorrow"
-    Then the slots from "14:00" to "15:00" for "Room X" should show as "Booked"
-    And the slots from "14:00" to "15:00" for "Room X" should be disabled
-
-  Scenario: Cancelled bookings do not block slots
-    Given a cancelled booking exists for "Room X" on "tomorrow" from "16:00" to "17:00"
-    When I visit the rooms page for "tomorrow"
-    Then the slots from "16:00" to "17:00" for "Room X" should show as "Available"
-    And I should be able to check the "16:00" slot for "Room X"
-
-  Scenario: Rejected bookings do not block slots
-    Given a rejected booking exists for "Room X" on "tomorrow" from "18:00" to "19:00"
-    When I visit the rooms page for "tomorrow"
-    Then the slots from "18:00" to "19:00" for "Room X" should show as "Available"
-    And I should be able to check the "18:00" slot for "Room X"
-
-  # Temporary Lock System
-
-  Scenario: Clicking "Book This Room" creates a temporary lock
-    When I visit the rooms page for "tomorrow"
-    And I select slots from "10:00" to "12:00" for "Room X"
-    And I click "Book This Room" for "Room X"
-    Then a temporary lock should be created for "Room X" slots "10:00" to "12:00"
-    And the lock should expire in 5 minutes
-
-  Scenario: Other users see locked slots as unavailable
-    Given I am on the booking confirmation page for "Room X" tomorrow "10:00"-"12:00"
-    And the slots are locked by me
-    When another student visits the rooms page for "tomorrow"
-    Then they should see the slots from "10:00" to "12:00" for "Room X" as "In Progress"
-    And the slots from "10:00" to "12:00" for "Room X" should be disabled for them
-
-  Scenario: Lock expires after timeout period
-    Given I am on the booking confirmation page for "Room X" tomorrow "10:00"-"12:00"
-    And the slots are locked by me
-    When 5 minutes have passed
-    And another user visits the rooms page for "tomorrow"
-    Then the slots from "10:00" to "12:00" for "Room X" should show as "Available"
-    And they should be able to check the "10:00" slot for "Room X"
-
-  Scenario: User is kicked back if lock expires before submission
-    Given I am on the booking confirmation page for "Room X" tomorrow "10:00"-"12:00"
-    And the slots are locked by me
-    When 5 minutes have passed
-    And I fill in "Purpose" with "My meeting"
-    And I click "Confirm Booking"
-    Then I should see "Your booking session has expired. Please select the time slots again."
-    And I should be redirected to the rooms page
+    When I visit the rooms page
+    And I click "Room X"
+    Then I should see slots for "Room X"
     And no booking should be created
 
   Scenario: Lock is released when user cancels

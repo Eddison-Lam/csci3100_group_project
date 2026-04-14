@@ -3,21 +3,8 @@ Given("the booking lock timeout is {int} minutes") do |minutes|
   Setting.find_or_create_by(key: "booking_lock_timeout").update(value: minutes)
 end
 
-Given("I am logged in as a superadmin") do
-  @current_user = create(:user, :superadmin)
-  login_as(@current_user, scope: :user)
-end
-
 When("I visit the admin settings page") do
   visit admin_settings_path
-end
-
-When("I fill in {string} with {string}") do |field, value|
-  fill_in field, with: value
-end
-
-When("I click {string}") do |button|
-  click_button button
 end
 
 When("I change the lock timeout to {int} minutes") do |minutes|
@@ -32,10 +19,6 @@ When("a student creates a new booking lock") do
   step "I visit the rooms page for \"tomorrow\""
   step "I select slots from \"10:00\" to \"12:00\" for \"Room X\""
   step "I click \"Book This Room\" for \"Room X\""
-end
-
-Then("I should see {string}") do |text|
-  expect(page).to have_content(text)
 end
 
 Then("the booking lock timeout should be {int} minutes") do |minutes|

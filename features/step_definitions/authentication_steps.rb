@@ -36,10 +36,6 @@ When("I fill in the following:") do |table|
   end
 end
 
-When("I click {string}") do |button|
-  click_button button
-end
-
 Then("my role should be {string}") do |role|
   expect(User.last.role).to eq(role)
 end

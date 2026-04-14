@@ -1,7 +1,3 @@
-Given("the booking lock timeout is {int} minutes") do |minutes|
-  Setting.find_or_create_by(key: "booking_lock_timeout").update(value: minutes)
-end
-
 Given("I am on the booking confirmation page for {string} {string} {string}-{string}") do |resource_name, date_str, start_time, end_time|
   date = parse_date(date_str)
   resource = find_resource(resource_name)
@@ -201,10 +197,6 @@ end
 
 Then("I should still see my lock on those slots") do
   step "the slots from \"10:00\" to \"12:00\" for \"Room X\" should show as \"Selected by you\""
-end
-
-Then("I should see {string}") do |message|
-  expect(page).to have_content(message)
 end
 
 Then("I should see a warning {string}") do |message|

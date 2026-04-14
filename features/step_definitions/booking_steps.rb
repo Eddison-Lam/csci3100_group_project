@@ -82,15 +82,16 @@ Given("a booking exists for {string} with status {string}") do |resource_name, s
 end
 
 Given("{string} has a booking") do |email|
-  user = User.find_by(email: email) || create(:user, email: email, role: :student)
+  user = User.find_by(email: email) || create(:user, :student, email: email, password: "password123")
   # Use an existing room or create a default one
-  resource = Room.first || create(:room, name: "Default Room")
+  department = Department.first || create(:department, name: "Default Department")
+  resource = Room.first || create(:room, name: "Default Room", department: department)
   create(:booking,
     user: user,
     resource: resource,
-    date: Date.current + 1.day,
-    start_time: "10:00",
-    end_time: "12:00",
+    booking_date: Date.current + 1.day,
+    start_slot: 16,
+    end_slot: 18,
     status: :confirmed
   )
 end
@@ -201,14 +202,6 @@ Then("I should see the booking details:") do |table|
   table.rows_hash.each do |label, value|
     expect(page).to have_content("#{label}: #{value}")
   end
-end
-
-Then("I should see {string}") do |text|
-  expect(page).to have_content(text)
-end
-
-Then("I should not see {string}") do |text|
-  expect(page).to have_no_content(text)
 end
 
 Then("the booking should not be created") do

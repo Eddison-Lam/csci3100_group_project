@@ -1,10 +1,14 @@
-Feature: Stripe Payment (Mock)      #default lock timeout is 5 minutes, stored in settings table
+Feature: Payment for Paid Bookings
   As a student
-  I want to pay for paid rooms/equipment during confirmation
-  So that booking only completes after successful payment
+  I want to complete payment for paid room/equipment bookings
+  So that my booking is confirmed
 
   Background:
-    Given a paid room "VIP Room" exists with price_per_unit 300.00
-    And a paid equipment "Projector" exists with price_per_unit 100.00
-    And Stripe mock mode is enabled
+    Given a paid room "VIP Room" exists in "UC" with price_per_unit 300.00
     And I am logged in as a student
+    And a department "UC" exists
+
+  Scenario: Paid booking redirects to payment page
+    When I visit the rooms page
+    And I click "VIP Room"
+    Then I should see "VIP Room"

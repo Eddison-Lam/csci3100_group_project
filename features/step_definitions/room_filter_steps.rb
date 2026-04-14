@@ -21,15 +21,7 @@ When("I visit the rooms page") do
   visit rooms_path
 end
 
-When("I select {string} from {string}") do |option, dropdown|
-  select option, from: dropdown
-end
 
-When("I check {string} under {string}") do |checkbox, section|
-  within(:xpath, "//fieldset[legend[contains(text(), '#{section}')]]") do
-    check checkbox
-  end
-end
 
 Given("I have not selected a specific facility") do
   # If your UI has a facility dropdown, ensure it's cleared
@@ -132,10 +124,6 @@ Then("I should see slots from {string} to {string} for each room") do |start_tim
     expect(slots).to have_css(".slot[data-time='#{start_time}']")
     expect(slots).to have_css(".slot[data-time='#{end_time}']")
   end
-end
-
-Then("I should see {string}") do |message|
-  expect(page).to have_content(message)
 end
 
 Then("I should see a weekly calendar for {string}") do |resource_name|
@@ -251,14 +239,6 @@ Then("the room {string} should show {string}") do |room_name, indicator|
   within(find_element_by_name(room_name)) do
     expect(page).to have_content(indicator)
   end
-end
-
-Then("I should not see {string}") do |content|
-  expect(page).to have_no_content(content)
-end
-
-Then("I should see {string}") do |content|
-  expect(page).to have_content(content)
 end
 
 Then("the slots from {string} to {string} for {string} should be available") do |start_time, end_time, resource_name|
