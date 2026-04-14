@@ -1,6 +1,8 @@
 Given("a department {string} exists with an admin {string}") do |dept_name, admin_email|
-  admin = create(:user, email: admin_email, role: :admin)
-  create(:department, name: dept_name, admin: admin)
+  admin = create(:user, :admin, email: admin_email, password: "password123")
+  department = create(:department, name: dept_name)
+  # Properly assign admin to department through the association
+  department.admins << admin unless department.admins.include?(admin)
 end
 
 Given("I am logged in as admin {string}") do |email|

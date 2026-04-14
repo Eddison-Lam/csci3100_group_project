@@ -23,9 +23,12 @@ Feature: Create Booking
     And I am logged in as a student
 
   Scenario: Complete booking flow for free room
-    When I visit the rooms page for "tomorrow"
-    And I select slots from "10:00" to "12:00" for "Meeting Room A"
-    And I click "Book This Room" for "Meeting Room A"
+    When I visit the rooms page
+    And I click "Meeting Room A"
+    Then I should see "Meeting Room A"
+    When I select date "tomorrow"
+    And I select slots from "10:00" to "12:00"
+    And I click "Proceed to Book"
     Then I should see the booking confirmation form with:
       | Room     | Meeting Room A  |
       | Date     | tomorrow        |
@@ -38,16 +41,18 @@ Feature: Create Booking
     And I should be on my bookings page
 
   Scenario: Complete booking flow for paid room
-    When I visit the rooms page for "tomorrow"
-    And I select slots from "14:00" to "16:00" for "VIP Room"
-    And I click "Book This Room" for "VIP Room"
+    When I visit the rooms page
+    And I click "VIP Room"
+    Then I should see "VIP Room"
+    When I select date "tomorrow"
+    And I select slots from "14:00" to "16:00"
+    And I click "Proceed to Book"
     Then I should see the booking confirmation form with:
-      | Room            | VIP Room    |
-      | Date            | tomorrow    |
-      | Time            | 14:00 – 16:00 |
-      | Duration        | 2 hours     |
-      | Price per slot  | $300.00     |
-      | Number of slots | 4           |
+      | Room     | VIP Room    |
+      | Date     | tomorrow    |
+      | Time     | 14:00 – 16:00 |
+      | Duration | 2 hours     |
+      | Cost     | $1200.00 (4 slots × $300.00) |
       | Total cost      | $1,200.00   |
     When I fill in "Purpose" with "Board meeting"
     And I click "Confirm Booking"

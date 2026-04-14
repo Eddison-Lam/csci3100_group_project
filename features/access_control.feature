@@ -1,14 +1,22 @@
 Feature: Access Control
   Role-based access restrictions
 
-  Scenario: Guest redirected to login
+  Scenario: Guest sees login and register buttons on home page
     When I go to the home page
-    Then I should be on the login page
+    Then I should see "CUHK Venue & Equipment Booking"
+    And I should see "Please log in to access the booking system"
+    And I should see "Register"
+    And I should see "Login"
+
+  Scenario: Guest can register a student account
+    When I register as a student with email "student@link.cuhk.edu.hk"
+    Then I should see "Welcome"
+    And I should see "Book a Room"
 
   Scenario: Student cannot access admin pages
     Given I am logged in as a student
-    When I visit the admin home page 
-    Then I should be redirected to the student home page
+    When I try to visit the admin resources page
+    Then I should be redirected to the home page
     And I should see "Access denied"
 
   Scenario: Admin cannot manage other department resources
