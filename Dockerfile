@@ -16,10 +16,6 @@ COPY . .
 
 RUN chmod +x bin/*
 
-CMD echo "=== Docker CMD started ===" && \
-    echo "=== Current dir: $(pwd) ===" && \
-    ls -la && \
-    echo "=== Starting Sidekiq ===" && \
-    bundle exec sidekiq & \
-    echo "=== Starting Rails server on port ${PORT} ===" && \
+CMD echo "=== MINIMAL TEST: Starting Rails server ===" && \
+    echo "RAILS_ENV = $RAILS_ENV" && \
     bundle exec rails server -b 0.0.0.0 -p ${PORT}
