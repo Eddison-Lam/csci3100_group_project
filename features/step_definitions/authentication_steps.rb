@@ -30,12 +30,6 @@ Given("I am logged in as admin {string}") do |email|
   login_as(@current_user, scope: :user)
 end
 
-When("I fill in the following:") do |table|
-  table.rows_hash.each do |field, value|
-    fill_in field, with: value
-  end
-end
-
 Then("my role should be {string}") do |role|
   expect(User.last.role).to eq(role)
 end

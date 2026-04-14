@@ -26,12 +26,6 @@ When("I select {string} from {string}") do |option, dropdown|
   select option, from: dropdown
 end
 
-When("I fill in the following:") do |table|
-  table.rows_hash.each do |field, value|
-    fill_in field, with: value
-  end
-end
-
 When("I fill in {string} with {string}") do |field, value|
   fill_in field, with: value
 end
