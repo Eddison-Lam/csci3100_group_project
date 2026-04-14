@@ -32,4 +32,11 @@ Things you may want to cover:
 
 * Deployment instructions
 
-* ...
+## Work Division
+
+| Feature Name        | Primary Developer | Secondary Developer | Notes                    |
+|---------------------|-------------------|---------------------|--------------------------|
+| Mock payment        | Eddison           | Cody                | Integrated Stripe API    |
+| SendGrid            | Eddison           | Cody                | -                        |
+| Daily Summary       | Bobby             | -                   | Use file extender        |
+
