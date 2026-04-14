@@ -165,6 +165,17 @@ When("I select slots from {string} to {string}") do |start_time_str, end_time_st
   end
 end
 
+Then(/^I should see "([^"]*)" or see "([^"]*)"$/) do |text1, text2|
+  # Try to find either text on the page
+  if page.has_content?(text1)
+    expect(page).to have_content(text1)
+  elsif page.has_content?(text2)
+    expect(page).to have_content(text2)
+  else
+    # Fail with a helpful message showing both expected texts
+    expect(page).to have_content(text1).or have_content(text2)
+  end
+end
 def time_to_slot(time_str)
   time = Time.zone.parse(time_str)
   time.hour * 2 + (time.min / 30).floor
