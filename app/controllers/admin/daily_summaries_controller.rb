@@ -2,8 +2,16 @@ class Admin::DailySummariesController < Admin::BaseController
   def index
     @selected_date = parse_selected_date(params[:date])
 
-    @room_bookings = Booking.joins(:resource).where(booking_date: @selected_date, resources: { type: "Room" })
-    @equipment_bookings = Booking.joins(:resource).where(booking_date: @selected_date, resources: { type: "Equipment" })
+    base_room_query = Booking.joins(:resource).where(booking_date: @selected_date, resources: { type: "Room" })
+    base_equipment_query = Booking.joins(:resource).where(booking_date: @selected_date, resources: { type: "Equipment" })
+
+    unless current_user.superadmin?
+      base_room_query = base_room_query.where(resources: { department_id: current_user.department_id })
+      base_equipment_query = base_equipment_query.where(resources: { department_id: current_user.department_id })
+    end
+
+    @room_bookings = base_room_query
+    @equipment_bookings = base_equipment_query
 
     @room_summaries = build_summary(@room_bookings, label_for: ->(resource) { resource.building.presence || "Unknown" })
     @equipment_summaries = build_summary(@equipment_bookings, label_for: ->(resource) { resource.name })

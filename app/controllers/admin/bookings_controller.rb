@@ -54,7 +54,7 @@ class Admin::BookingsController < Admin::BaseController
   private
 
   def set_booking
-    @booking = Booking.find(params[:id])
+    @booking = Booking.joins(:resource).find_by!(id: params[:id], resources: current_user.superadmin? ? {} : { department_id: current_user.department_id })
   end
 
   def booking_params
@@ -63,36 +63,36 @@ class Admin::BookingsController < Admin::BaseController
 end
 
   def for_slot
-  resource = Resource.find(params[:resource_id])
-  date     = Date.parse(params[:booking_date])
-  slot     = params[:slot].to_i
+    resource = current_user.superadmin? ? Resource.find(params[:resource_id]) : Resource.find_by!(id: params[:resource_id], department_id: current_user.department_id)
+    date     = Date.parse(params[:booking_date])
+    slot     = params[:slot].to_i
 
-  # either find existing booking covering this slot, or build a new 1-slot booking
-  booking = Booking.where(resource:, booking_date: date)
-                   .where("start_slot <= ? AND end_slot > ?", slot, slot)
-                   .first
+    # either find existing booking covering this slot, or build a new 1-slot booking
+    booking = Booking.where(resource:, booking_date: date)
+                     .where("start_slot <= ? AND end_slot > ?", slot, slot)
+                     .first
 
-  unless booking
-    booking = Booking.new(
-      resource:      resource,
-      user:          current_user,              # or some placeholder/admin user
-      booking_date:  date,
-      start_slot:    slot,
-      end_slot:      slot + 1
-    )
-  end
-
-  booking.status = params[:status]
-
-  if booking.save
-    if booking.confirmed?
-      booking.update_occupied_bitmap
-    elsif booking.pending_payment?
-      booking.update_pending_bitmap if booking.respond_to?(:update_pending_bitmap)
+    unless booking
+      booking = Booking.new(
+        resource:      resource,
+        user:          current_user,              # or some placeholder/admin user
+        booking_date:  date,
+        start_slot:    slot,
+        end_slot:      slot + 1
+      )
     end
-    redirect_back fallback_location: admin_rooms_path, notice: "Slot updated."
-  else
-    redirect_back fallback_location: admin_rooms_path,
-                  alert: booking.errors.full_messages.to_sentence
+
+    booking.status = params[:status]
+
+    if booking.save
+      if booking.confirmed?
+        booking.update_occupied_bitmap
+      elsif booking.pending_payment?
+        booking.update_pending_bitmap if booking.respond_to?(:update_pending_bitmap)
+      end
+      redirect_back fallback_location: admin_rooms_path, notice: "Slot updated."
+    else
+      redirect_back fallback_location: admin_rooms_path,
+                    alert: booking.errors.full_messages.to_sentence
+    end
   end
-end
