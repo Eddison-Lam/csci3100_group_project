@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.1].define(version: 2026_04_12_090128) do
-  create_table "bookings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "bookings", force: :cascade do |t|
     t.date "booking_date", null: false
     t.datetime "created_at", null: false
     t.integer "end_slot", null: false
@@ -33,7 +33,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_090128) do
     t.index ["user_id"], name: "index_bookings_on_user_id"
   end
 
-  create_table "departments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "departments", force: :cascade do |t|
     t.string "code", null: false
     t.datetime "created_at", null: false
     t.boolean "is_active", default: true, null: false
@@ -42,7 +42,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_090128) do
     t.index ["code"], name: "index_departments_on_code", unique: true
   end
 
-  create_table "resources", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "resources", force: :cascade do |t|
     t.integer "advance_booking_days", default: 14
     t.string "building"
     t.integer "capacity"
@@ -68,7 +68,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_090128) do
     t.index ["type"], name: "index_resources_on_type"
   end
 
-  create_table "settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "settings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
     t.string "key", null: false
@@ -78,7 +78,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_090128) do
     t.index ["key"], name: "index_settings_on_key", unique: true
   end
 
-  create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "department_id"
     t.string "email", default: "", null: false

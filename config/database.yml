@@ -16,6 +16,10 @@ test:
   encoding: utf8mb4
   database: your_test_db_name
   username: root
-  password: <%= ENV['DATABASE_PASSWORD'] %>   # ← 必须正确填写
-  host: db                      # ← 如果 MySQL 在容器中，用服务名 db
+  password: <%= ENV['DATABASE_PASSWORD'] %>  
+  host: db                      
   port: 3306
+
+production:
+  <<: *default
+  url: <%= ENV['DATABASE_URL'] %>

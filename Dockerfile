@@ -4,15 +4,14 @@ RUN apt-get update -qq && apt-get install -y \
     build-essential \
     default-mysql-client \
     libmariadb-dev \
-    nodejs
+    nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-RUN gem install rails
 
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
 COPY . .
 
-CMD ["rails", "server", "-b", "0.0.0.0"]
+CMD sh -c "bundle exec rails db:migrate && bundle exec sidekiq & bundle exec rails server -b 0.0.0.0"
