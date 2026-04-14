@@ -1,0 +1,255 @@
+<!-- app/views/admin/daily_summaries/index.html.erb -->
+<h1>Daily Booking Summary</h1>
+
+<%= form_with url: admin_daily_summary_path, method: :get, local: true do |form| %>
+  <div style="margin-bottom: 1rem;">
+    <%= form.label :date, "Select date", style: "display: block; margin-bottom: 0.25rem;" %>
+    <%= form.date_field :date, value: @selected_date.to_s, style: "padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" %>
+  </div>
+
+  <%= form.submit "Show summary", style: "padding: 0.5rem 1rem; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer;" %>
+<% end %>
+
+<% if @room_summaries.any? || @equipment_summaries.any? %>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+    <p style="margin: 0; font-weight: 600;">Daily report for <strong><%= @selected_date %></strong></p>
+    <button id="export-daily-summary-pdf" type="button" style="padding: 0.5rem 1rem; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;">Download daily report PDF</button>
+  </div>
+
+  <style>
+    #daily-summary-report {
+      width: 100%;
+      max-width: 100%;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    #daily-summary-report table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    #daily-summary-report th,
+    #daily-summary-report td {
+      padding: 0.75rem;
+      word-break: break-word;
+      white-space: normal;
+    }
+
+    #daily-summary-report th:nth-child(1),
+    #daily-summary-report td:nth-child(1) {
+      width: 30%;
+    }
+
+    #daily-summary-report th:nth-child(2),
+    #daily-summary-report td:nth-child(2),
+    #daily-summary-report th:nth-child(3),
+    #daily-summary-report td:nth-child(3),
+    #daily-summary-report th:nth-child(4),
+    #daily-summary-report td:nth-child(4),
+    #daily-summary-report th:nth-child(5),
+    #daily-summary-report td:nth-child(5),
+    #daily-summary-report th:nth-child(6),
+    #daily-summary-report td:nth-child(6),
+    #daily-summary-report th:nth-child(7),
+    #daily-summary-report td:nth-child(7) {
+      width: 10%;
+    }
+  </style>
+
+  <div id="daily-summary-report">
+    <% if @room_summaries.any? %>
+      <h2 style="margin-top: 0;">Room booking summary</h2>
+      <table>
+        <thead>
+          <tr style="background: #2c3e50; color: white; text-align: left;">
+            <th>Building</th>
+            <th>Total bookings</th>
+            <th>Confirmed</th>
+            <th>Cancelled</th>
+            <th>No-show</th>
+            <th>Pending payment</th>
+            <th>Distinct rooms booked</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @room_summaries.each do |summary| %>
+            <tr style="border-bottom: 1px solid #e0e0e0;">
+              <td><%= summary[:label] %></td>
+              <td><%= summary[:total_bookings] %></td>
+              <td><%= summary[:confirmed_count] %></td>
+              <td><%= summary[:cancelled_count] %></td>
+              <td><%= summary[:no_show_count] %></td>
+              <td><%= summary[:pending_payment_count] %></td>
+              <td><%= summary[:distinct_resources_count] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr style="background: #f4f6f6; font-weight: bold;">
+            <td>Totals</td>
+            <td><%= @room_totals[:total_bookings] %></td>
+            <td><%= @room_totals[:confirmed_total] %></td>
+            <td><%= @room_totals[:cancelled_total] %></td>
+            <td><%= @room_totals[:no_show_total] %></td>
+            <td><%= @room_totals[:pending_payment_total] %></td>
+            <td>&mdash;</td>
+          </tr>
+        </tfoot>
+      </table>
+    <% end %>
+
+    <% if @equipment_summaries.any? %>
+      <h2 style="margin-top: 2rem;">Equipment booking summary</h2>
+      <table>
+        <thead>
+          <tr style="background: #2c3e50; color: white; text-align: left;">
+            <th>Equipment</th>
+            <th>Total bookings</th>
+            <th>Confirmed</th>
+            <th>Cancelled</th>
+            <th>No-show</th>
+            <th>Pending payment</th>
+            <th>Distinct equipment booked</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @equipment_summaries.each do |summary| %>
+            <tr style="border-bottom: 1px solid #e0e0e0;">
+              <td><%= summary[:label] %></td>
+              <td><%= summary[:total_bookings] %></td>
+              <td><%= summary[:confirmed_count] %></td>
+              <td><%= summary[:cancelled_count] %></td>
+              <td><%= summary[:no_show_count] %></td>
+              <td><%= summary[:pending_payment_count] %></td>
+              <td><%= summary[:distinct_resources_count] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr style="background: #f4f6f6; font-weight: bold;">
+            <td>Totals</td>
+            <td><%= @equipment_totals[:total_bookings] %></td>
+            <td><%= @equipment_totals[:confirmed_total] %></td>
+            <td><%= @equipment_totals[:cancelled_total] %></td>
+            <td><%= @equipment_totals[:no_show_total] %></td>
+            <td><%= @equipment_totals[:pending_payment_total] %></td>
+            <td>&mdash;</td>
+          </tr>
+        </tfoot>
+      </table>
+    <% end %>
+  </div>
+<% else %>
+  <p style="margin-top: 1.5rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; border-radius: 4px;">
+    No bookings found for this date.
+  </p>
+<% end %>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  function initializePdfExport() {
+    var button = document.getElementById("export-daily-summary-pdf")
+    if (!button || button.dataset.listenerAttached === "true") return
+
+    function getTableData(table) {
+      var headerCells = Array.from(table.querySelectorAll("thead th"))
+      var headers = headerCells.map(function(cell) { return cell.textContent.trim() })
+      var rows = Array.from(table.querySelectorAll("tbody tr")).map(function(row) {
+        return Array.from(row.querySelectorAll("td")).map(function(cell) { return cell.textContent.trim() })
+      })
+      var footerRows = Array.from(table.querySelectorAll("tfoot tr")).map(function(row) {
+        return Array.from(row.querySelectorAll("td")).map(function(cell) { return cell.textContent.trim() })
+      })
+      return { headers: headers, rows: rows.concat(footerRows) }
+    }
+
+    function padText(text, width) {
+      if (text.length > width) {
+        return text.slice(0, width - 3) + "..."
+      }
+      return text + " ".repeat(width - text.length)
+    }
+
+    function drawSection(doc, title, tableData, x, y, lineHeight, maxWidth) {
+      doc.setFontSize(10)
+      doc.setFont("courier", "normal")
+      doc.text(title, x, y)
+      y += lineHeight
+
+      var columnWidths = [24, 10, 8, 8, 8, 10, 10]
+      var headers = tableData.headers.map(function(text, index) {
+        var label = text
+        if (index === 0) label = text.replace(/Building/, "Bldg").replace(/Equipment/, "Equip")
+        if (index === 1) label = text.replace(/Total bookings/, "Total")
+        if (index === 2) label = text.replace(/Confirmed/, "Conf")
+        if (index === 3) label = text.replace(/Cancelled/, "Canc")
+        if (index === 4) label = text.replace(/No-show/, "No-show")
+        if (index === 5) label = text.replace(/Pending payment/, "Pending")
+        if (index === 6) label = text.replace(/Distinct .* booked/, "Distinct")
+        return padText(label, columnWidths[index] || 10)
+      }).join(" | ")
+      doc.text(headers, x, y)
+      y += lineHeight
+
+      var separator = "-".repeat(Math.min(headers.length, Math.floor(maxWidth / 6)))
+      doc.text(separator, x, y)
+      y += lineHeight
+
+      tableData.rows.forEach(function(row) {
+        var rowLine = row.map(function(text, index) {
+          return padText(text, columnWidths[index] || 10)
+        }).join(" | ")
+        doc.text(rowLine, x, y)
+        y += lineHeight
+        if (y > doc.internal.pageSize.getHeight() - 40) {
+          doc.addPage()
+          y = 30
+        }
+      })
+
+      return y + lineHeight
+    }
+
+    button.addEventListener("click", function() {
+      var selectedDate = document.querySelector('input[name="date"]')?.value || "summary"
+      var filename = "daily_booking_summary_" + selectedDate + ".pdf"
+      var doc = new window.jspdf.jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
+      var pageWidth = doc.internal.pageSize.getWidth()
+      var pageHeight = doc.internal.pageSize.getHeight()
+      var margin = 20
+      var x = margin
+      var y = margin
+      var lineHeight = 12
+      var maxWidth = pageWidth - margin * 2
+
+      doc.setFont("courier", "normal")
+      doc.setFontSize(10)
+      doc.text("Daily Booking Summary - " + selectedDate, x, y)
+      y += lineHeight * 1.5
+
+      var tables = Array.from(document.querySelectorAll("#daily-summary-report table"))
+      tables.forEach(function(table, index) {
+        var heading = table.previousElementSibling && table.previousElementSibling.tagName === "H2" ? table.previousElementSibling.textContent.trim() : "Section " + (index + 1)
+        var tableData = getTableData(table)
+        y = drawSection(doc, heading, tableData, x, y, lineHeight, maxWidth)
+
+        if (y > pageHeight - margin - lineHeight * 5) {
+          doc.addPage()
+          y = margin
+        }
+      })
+
+      doc.save(filename)
+    })
+
+    button.dataset.listenerAttached = "true"
+  }
+
+  document.addEventListener("turbo:load", initializePdfExport)
+  initializePdfExport()
+</script>
