@@ -6,18 +6,14 @@ class Admin::ResourcesController < ApplicationController
   before_action :require_admin!
 
   def index
-    if current_user.respond_to?(:department_id)
-      @resources = Resource.where(department_id: current_user.department_id)
-    else
-      @resources = Resource.all
-    end
+    @resources = current_user.superadmin? ? Resource.all : Resource.where(department_id: current_user.department_id)
   end
 
   private
 
   def require_admin!
-    unless current_user.role == "admin" # Make sure 'role' matches your db column
-      redirect_to root_path, alert: "You are not authorized to view this page."
+    unless current_user.admin? || current_user.superadmin?
+      redirect_to root_path, alert: "Access denied."
     end
   end
 end
