@@ -26,34 +26,6 @@ When("I click {string}") do |link_or_button|
   click_link_or_button link_or_button
 end
 
-When("I fill in {string} with {string}") do |field, value|
-  fill_in field, with: value
-end
-
-When("I select {string} from {string}") do |option, dropdown|
-  select option, from: dropdown
-end
-
-When("I fill in the following:") do |table|
-  table.rows_hash.each do |field, value|
-    fill_in field, with: value
-  end
-end
-
-When("I check {string} under {string}") do |checkbox, section|
-  within(:xpath, "//fieldset[legend[contains(text(), '#{section}')]]") do
-    check checkbox
-  end
-end
-
-When("I am on the rooms page") do
-  visit rooms_path
-end
-
-Then("the page should not contain {string}") do |text|
-  expect(page).to have_no_content(text)
-end
-
 Then("I should see {string}") do |text|
   expect(page).to have_content(text)
 end
@@ -68,6 +40,10 @@ end
 
 Then("I should be on the {string} page") do |page_name|
   expect(current_path).to eq(path_to(page_name))
+end
+
+Then("I should be on the home page") do
+  expect(current_path).to eq(root_path)
 end
 
 Then("I should be on the login page") do
@@ -167,9 +143,4 @@ When("I select slots from {string} to {string}") do |start_time_str, end_time_st
     start_slot += 1
     current_time += 30.minutes
   end
-end
-
-def time_to_slot(time_str)
-  time = Time.zone.parse(time_str)
-  time.hour * 2 + (time.min / 30).floor
 end

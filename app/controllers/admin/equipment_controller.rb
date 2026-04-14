@@ -1,9 +1,9 @@
 # app/controllers/admin/equipment_controller.rb
 class Admin::EquipmentController < Admin::BaseController
-  before_action :set_equipment, only: [:show]
+  before_action :set_equipment, only: [ :show ]
 
   def index
-    @equipment = Equipment.all
+    @equipment = current_user.superadmin? ? Equipment.all : Equipment.where(department_id: current_user.department_id)
   end
 
   def show
@@ -24,9 +24,9 @@ class Admin::EquipmentController < Admin::BaseController
   private
 
   def set_equipment
-    @equipment = Equipment.find(params[:id])
+    @equipment = current_user.superadmin? ? Equipment.find(params[:id]) : Equipment.find_by!(id: params[:id], department_id: current_user.department_id)
 
-    unless current_user.admin? || current_user.superadmin?
+    unless current_user.can_manage?(@equipment)
       redirect_to root_path, alert: "Access denied."
     end
   end
