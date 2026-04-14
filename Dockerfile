@@ -14,4 +14,4 @@ RUN bundle install
 
 COPY . .
 
-CMD sh -c "bundle exec rails db:migrate && bundle exec sidekiq & bundle exec rails server -b 0.0.0.0 -p ${PORT}"
+CMD echo "=== Docker CMD is running === " && bundle exec rails server -b 0.0.0.0 -p ${PORT}
