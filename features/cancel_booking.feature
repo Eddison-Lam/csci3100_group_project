@@ -9,4 +9,4 @@ Feature: Cancel Booking
 
   Scenario: View my bookings page
     When I visit my bookings page
-    Then I should see "My Bookings" or see "Booking"
+    Then I should see "My Bookings"

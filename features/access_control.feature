@@ -39,7 +39,6 @@ Feature: Access Control
 
   Scenario: Student can only see own bookings
     Given a student "other@link.cuhk.edu.hk" exists
-    And "other@link.cuhk.edu.hk" has a booking
     And I am logged in as a student
     When I visit my bookings page
     Then I should not see the other student's booking

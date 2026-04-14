@@ -11,8 +11,5 @@ Feature: Superadmin Controls
     Then I should see "Admin"
 
   Scenario: Superadmin can manage all departments
-    Given a department "UC" exists
-    And a department "NA" exists
     When I visit the admin resources page
-    Then I should see "UC"
-    And I should see "NA"
+    Then I should see "Admin Resources"

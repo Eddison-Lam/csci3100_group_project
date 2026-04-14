@@ -253,3 +253,15 @@ end
 def find_slot_checkbox(resource, time)
   find(:xpath, "//input[@type='checkbox' and @data-resource-id='#{resource.id}' and @data-time='#{time}']")
 end
+
+def find_element_by_name(name)
+  # Find the element that contains the name (exact match) and then return its closest ancestor div
+  find(:xpath, "//*[normalize-space()='#{name}']/ancestor::div[1]")
+rescue Capybara::ElementNotFound
+  # Fallback: any element containing the name, then take its parent container
+  find(:xpath, "//*[contains(text(), '#{name}')]/ancestor::*[1]")
+end
+
+def find_resource(name)
+  Room.find_by(name: name) || Equipment.find_by(name: name) || (raise "Resource #{name} not found")
+end

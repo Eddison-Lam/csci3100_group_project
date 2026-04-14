@@ -73,7 +73,6 @@ group :test do
   gem "cucumber-rails", require: false
   gem "database_cleaner-active_record"
   gem "webmock"
-  gem "simplecov", require: false
 end
 
 
