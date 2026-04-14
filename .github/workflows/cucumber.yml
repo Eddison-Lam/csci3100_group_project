@@ -11,17 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      # Matches your docker-compose 'db' service
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root    # From your .env: DB_PASSWORD
-          MYSQL_DATABASE: app_db       # From your .env: DB_NAME
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: app_db
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      # Matches your docker-compose 'redis' service
       redis:
         image: redis:7-alpine
         ports:
@@ -30,16 +28,15 @@ jobs:
 
     env:
       RAILS_ENV: test
-      # We use 127.0.0.1 because GitHub maps service ports to the local runner
       DATABASE_URL: "mysql2://root:root@127.0.0.1:3306/app_db"
       REDIS_URL: "redis://localhost:6379/0"
+      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install MySQL Client headers
-        # Necessary for the 'mysql2' gem to compile on Ubuntu
+      - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y libmysqlclient-dev
 
       - name: Set up Ruby
@@ -53,11 +50,4 @@ jobs:
           bin/rails db:prepare
 
       - name: Run Cucumber tests
-        run: bundle exec cucumber
-
-      - name: Upload Screenshots (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: capybara-screenshots
-          path: tmp/capybara/
+        run: bundle exec cucumber features/
