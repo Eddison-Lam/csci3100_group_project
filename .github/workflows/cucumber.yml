@@ -48,12 +48,6 @@ jobs:
           ruby-version: '3.3' # Match your local Ruby version
           bundler-cache: true # Caches gems automatically
 
-      - name: Install JS dependencies
-        run: npm install
-
-      - name: Build assets
-        # Required since you use jsbundling-rails
-        run: bundle exec rails javascript:build
 
       - name: Set up Database
         run: |
