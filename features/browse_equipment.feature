@@ -9,12 +9,12 @@ Feature: Browse Equipment
       | United College   | UC   |
       | New Asia College | NA   |
     And the following equipment exists:
-      | name             | department | quantity | equipment_type  | price_per_unit |
-      | Portable PA      | UC         | 3        | Audio Equipment | 0.00           |
-      | Projector        | NA         | 5        | AV Equipment    | 100.00         |
-      | Wireless Mic Set | UC         | 2        | Audio Equipment | 50.00          |
-      | 攝影機           | NA         | 2        | 攝影器材        | 200.00         |
-      | Lighting Kit     | UC         | 1        | Lighting        | 150.00         |
+      | name             | department | quantity | price_per_unit |
+      | Portable PA      | UC         | 3        | 0.00           |
+      | Projector        | NA         | 5        | 100.00         |
+      | Wireless Mic Set | UC         | 2        | 50.00          |
+      | 攝影機            | NA         | 2       | 200.00         |
+      | Lighting Kit     | UC         | 1        | 150.00         |
     And I am logged in as a student
 
   Scenario: See all active equipment by default

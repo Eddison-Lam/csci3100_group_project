@@ -46,6 +46,10 @@ When("I check {string} under {string}") do |checkbox, section|
   end
 end
 
+When("I am on the rooms page") do
+  visit rooms_path
+end
+
 Then("the page should not contain {string}") do |text|
   expect(page).to have_no_content(text)
 end
@@ -127,6 +131,10 @@ end
 
 Then("I should be on the equipment page") do
   expect(current_path).to eq(equipment_index_path)
+end
+
+Then("I should be on the my bookings page") do
+  expect(current_path).to eq(bookings_path)
 end
 
 Then("the booking status should be {string}") do |status|

@@ -20,8 +20,8 @@ Given("a room {string} exists in {string}") do |room_name, dept_name|
   create(:room, name: room_name, department: department)
 end
 
-Given("a room {string} exists in {string} with price_per_unit {float}") do |room_name, dept_name, price|
-  department = Department.find_by(name: dept_name)
+Given('a room {string} exists with price_per_unit {float}') do |room_name, price|
+  department = Department.first || create(:department, name: "Default Department")
   create(:room, name: room_name, department: department, price_per_unit: price)
 end
 
