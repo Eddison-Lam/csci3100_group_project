@@ -14,4 +14,14 @@ RUN bundle install
 
 COPY . .
 
-CMD echo "=== Docker CMD is running === " && bundle exec rails server -b 0.0.0.0 -p ${PORT}
+RUN chmod +x bin/*
+
+CMD echo "=== Docker CMD started ===" && \
+    echo "=== Current dir: $(pwd) ===" && \
+    ls -la && \
+    echo "=== Running db:migrate ===" && \
+    bundle exec rails db:migrate && \
+    echo "=== Starting Sidekiq ===" && \
+    bundle exec sidekiq & \
+    echo "=== Starting Rails server on port ${PORT} ===" && \
+    bundle exec rails server -b 0.0.0.0 -p ${PORT}
