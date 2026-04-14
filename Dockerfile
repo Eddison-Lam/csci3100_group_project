@@ -19,8 +19,6 @@ RUN chmod +x bin/*
 CMD echo "=== Docker CMD started ===" && \
     echo "=== Current dir: $(pwd) ===" && \
     ls -la && \
-    echo "=== Running db:migrate ===" && \
-    bundle exec rails db:migrate && \
     echo "=== Starting Sidekiq ===" && \
     bundle exec sidekiq & \
     echo "=== Starting Rails server on port ${PORT} ===" && \
