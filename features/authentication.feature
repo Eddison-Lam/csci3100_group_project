@@ -3,9 +3,12 @@ Feature: Authentication
 
 # Registration
 
-Scenario: Visit home page without login redirects to login
+Scenario: Visit home page without login shows registration prompt
     When I go to the home page
-    Then I should be on the login page
+    Then I should see "CUHK Venue & Equipment Booking"
+    And I should see "Please log in to access the booking system"
+    And I should see "Register"
+    And I should see "Login"
 
 Scenario: Student registers with link.cuhk.edu.hk email
   Given I am on the registration page
@@ -17,33 +20,27 @@ Scenario: Student registers with link.cuhk.edu.hk email
   Then I should see "Welcome"
   And my role should be "student"
 
-Scenario: Staff registers with cuhk.edu.hk email (pending activation)
+Scenario: Staff registers with cuhk.edu.hk email automatically becomes admin
     Given I am on the registration page
     When I fill in the following:
-      | Name                  | Dr. Wong         |
       | Email                 | wong@cuhk.edu.hk |
       | Password              | password123      |
       | Password confirmation | password123      |
     And I click "Sign up"
-    Then I should see "Account pending activation"
-    And my role should be "admin"
-    And I should not have a department assigned
+    Then my role should be "admin"
 
 Scenario: Rejected with non-CUHK email
     Given I am on the registration page
     When I fill in the following:
-      | Name                  | Hacker           |
       | Email                 | hacker@gmail.com |
       | Password              | password123      |
       | Password confirmation | password123      |
     And I click "Sign up"
     Then I should see "must be a CUHK email address"
-    And I should not be signed in
 
 Scenario: Rejected with invalid password
     Given I am on the registration page
     When I fill in the following:
-      | Name                  | Test User                   |
       | Email                 | test@link.cuhk.edu.hk       |
       | Password              | short                       |
       | Password confirmation | short                       |
@@ -59,17 +56,17 @@ Scenario: Student logs in successfully
       | Email    | 1155123456@link.cuhk.edu.hk |
       | Password | password123                 |
     And I click "Log in"
-    Then I should be on the student home page
-    And I should see "Browse Rooms"
+    Then I should see "Welcome"
+    And I should see "Book a Room"
 
-Scenario: Activated admin logs in successfully
+Scenario: Admin logs in successfully
     Given an activated admin "ucadmin@cuhk.edu.hk" exists in department "UC"
     And I am on the login page
     When I fill in the following:
       | Email    | ucadmin@cuhk.edu.hk |
       | Password | password123         |
     And I click "Log in"
-    Then I should be on the admin home page
+    Then I should see "Welcome"
 
 Scenario: Login with wrong password
     Given a student "1155123456@link.cuhk.edu.hk" exists

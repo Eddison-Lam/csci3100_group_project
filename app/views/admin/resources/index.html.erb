@@ -1,0 +1,20 @@
+<h1>Admin Resources</h1>
+
+<div class="resources-list">
+  <% if @resources.any? %>
+    <ul>
+      <% @resources.each do |resource| %>
+        <li>
+          <strong><%= resource.name %></strong>
+          <% if resource.type == "Room" %>
+            (Room - <%= resource.department&.name %>)
+          <% else %>
+            (Equipment - <%= resource.department&.name %>)
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>No resources found.</p>
+  <% end %>
+</div>

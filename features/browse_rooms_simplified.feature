@@ -9,11 +9,11 @@ Feature: Browse Rooms
       | United College   | UC   |
       | New Asia College | NA   |
     And the following rooms exist:
-      | name          | department | building              | room_type    | location | capacity | price_per_unit |
-      | UC Meeting A  | UC         | UC Amenities Building | Meeting Room | 2/F      | 30       | 0.00           |
-      | UC Meeting B  | UC         | UC Amenities Building | Meeting Room | 3/F      | 20       | 50.00          |
-      | UC Study Room | UC         | UC Library            | Study Room   | 3/F      | 8        | 0.00           |
-      | NA Room       | NA         | NA Humanities Bldg    | Study Room   | 1/F      | 20       | 100.00         |
+      | name            | department | building              | room_type    | location | capacity | price_per_unit |
+      | UC Meeting A    | UC         | UC Amenities Building | Meeting Room | 2/F      | 30       | 0.00           |
+      | UC Meeting B    | UC         | UC Amenities Building | Meeting Room | 3/F      | 20       | 50.00          |
+      | UC Study Room   | UC         | UC Library            | Study Room   | 3/F      | 8        | 0.00           |
+      | NA Room         | NA         | NA Humanities Bldg    | Study Room   | 1/F      | 20       | 100.00         |
     And I am logged in as a student
 
   Scenario: See all rooms by default
@@ -35,22 +35,24 @@ Feature: Browse Rooms
     And I click "Search"
     Then I should see "UC Meeting A"
     And I should see "UC Meeting B"
+    But I should not see "UC Study Room"
 
   Scenario: Filter by capacity
     When I visit the rooms page
-    And I fill in "capacity" with "20"
+    And I fill in "capacity" with "25"
     And I click "Search"
     Then I should see "UC Meeting A"
-    And I should see "UC Meeting B"
     And I should see "NA Room"
+    But I should not see "UC Study Room"
 
-  Scenario: Click room to view availability
+  Scenario: Click room to view details
     When I visit the rooms page
     And I click "UC Meeting A"
     Then I should see "UC Meeting A"
     And I should see "Capacity"
+    And I should see "Building"
 
-  Scenario: Navigate to next day
+  Scenario: Select slots to book room
     When I visit the rooms page
     And I click "UC Meeting A"
     And I select date "tomorrow"

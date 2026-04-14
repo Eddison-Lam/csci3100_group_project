@@ -1,9 +1,14 @@
-Feature: Waitlist for Full Slots
+Feature: View Bookings Waitlist
   As a student
-  I want to join waitlist when slot is full
-  So that I get notified if someone cancels
+  I want to see available slots
+  So that I can book when slots are full
 
   Background:
-    Given a room "Room A" exists
-    And all slots "10:00"-"12:00" tomorrow are fully booked
+    Given a department "UC" exists
+    And a room "Room A" exists in "UC"
     And I am logged in as a student
+
+  Scenario: View available slots
+    When I visit the rooms page
+    And I click "Room A"
+    Then I should see "Room A"

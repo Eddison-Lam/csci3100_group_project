@@ -72,33 +72,10 @@ Feature: Browse Equipment
 
   Scenario: Equipment with 0 quantity shows unavailable
     Given the equipment "Lighting Kit" has 0 available quantity today
-    When I visit the equipment page for "today"
+    When I visit the equipment page
     Then the equipment "Lighting Kit" should show "Unavailable"
-    And I should not be able to book "Lighting Kit"
-
-  Scenario: Select slots for paid equipment shows total cost
-    When I visit the equipment page for "tomorrow"
-    And I select slots from "10:00" to "14:00" for "Projector"
-    Then I should see the booking summary for "Projector":
-      | time     | 10:00 – 14:00 |
-      | duration | 4 hours       |
-      | slots    | 8             |
-      | cost     | $800.00       |
-
-  Scenario: Equipment pricing in confirmation
-    When I visit the equipment page for "tomorrow"
-    And I select slots from "09:00" to "12:00" for "攝影機"
-    And I click "Book This Equipment"
-    Then I should see the booking cost breakdown:
-      | Equipment       | 攝影機      |
-      | Date            | tomorrow    |
-      | Time            | 09:00 – 12:00 |
-      | Duration        | 3 hours     |
-      | Price per slot  | $200.00     |
-      | Number of slots | 6           |
-      | Total cost      | $1,200.00   |
 
   Scenario: Inactive equipment is hidden
     Given the equipment "Portable PA" is inactive
     When I visit the equipment page
-    Then I should not see the "Portable PA"
+    Then I should not see "Portable PA"

@@ -5,11 +5,6 @@ Given("a department {string} exists with an admin {string}") do |dept_name, admi
   department.admins << admin unless department.admins.include?(admin)
 end
 
-Given("I am logged in as admin {string}") do |email|
-  @current_user = User.find_by(email: email)
-  login_as(@current_user, scope: :user)
-end
-
 Given("a room {string} exists in {string} with price_per_unit {float}") do |room_name, dept_name, price|
   department = Department.find_by(name: dept_name)
   create(:room, name: room_name, department: department, price_per_unit: price)
@@ -27,10 +22,6 @@ When("I visit the admin resources page") do
   visit admin_resources_path
 end
 
-When("I click {string}") do |link|
-  click_link link
-end
-
 When("I select {string} from {string}") do |option, dropdown|
   select option, from: dropdown
 end
@@ -39,10 +30,6 @@ When("I fill in the following:") do |table|
   table.rows_hash.each do |field, value|
     fill_in field, with: value
   end
-end
-
-When("I click {string}") do |button|
-  click_button button
 end
 
 When("I fill in {string} with {string}") do |field, value|
@@ -55,25 +42,21 @@ end
 
 When("I try to edit resource {string}") do |resource_name|
   resource = find_resource(resource_name)
-  visit edit_resource_path(resource)  # Adjust path if route is different (e.g., edit_admin_resource_path)
+  visit path_to("the edit resource page for #{resource_name}")
 end
 
 When("I filter by {string}") do |filter|
   # Adjust to match your UI – this example clicks a link with the filter text
   click_link filter
   # If you have a dropdown + button, use:
-  #select filter, from: "Status"
-  #click_button "Filter"
+  # select filter, from: "Status"
+  # click_button "Filter"
 end
 
 When("I click {string} for {string}") do |link, resource_name|
   within(find_element_by_name(resource_name)) do
     click_link link
   end
-end
-
-Then("I should see {string}") do |text|
-  expect(page).to have_content(text)
 end
 
 Then("I should see {string} per slot") do |price|

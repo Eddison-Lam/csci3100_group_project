@@ -8,9 +8,9 @@ module NavigationHelpers
     when "the registration page"
       new_user_registration_path
     when "the student home page"
-      student_root_path
+      root_path
     when "the admin home page"
-      admin_root_path
+      admin_resources_path
     when "the admin resources page"
       admin_resources_path
     when "the admin bookings page"
@@ -22,9 +22,17 @@ module NavigationHelpers
     when "the equipment page"
       equipment_index_path
     when "the my bookings page"
-      my_bookings_path
+      bookings_path
     when "the booking confirmation page"
-      new_booking_path   # adjust if needed
+      new_bookings_path
+    when "the edit resource page for (.+)"
+      resource_name = $1
+      resource = Room.find_by(name: resource_name) || Equipment.find_by(name: resource_name)
+      if resource.nil?
+        raise "Resource '#{resource_name}' not found"
+      end
+      # 假设存在 edit_admin_resource_path 路由
+      edit_admin_resource_path(resource)
     else
       raise "Can't find mapping from \"#{page_name}\" to a path."
     end

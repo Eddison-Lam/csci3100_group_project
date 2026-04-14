@@ -7,22 +7,10 @@ When("I visit the equipment page") do
   visit equipment_index_path
 end
 
-When("I select {string} from {string}") do |option, dropdown|
-  select option, from: dropdown
-end
-
-When("I fill in {string} with {string}") do |field, value|
-  fill_in field, with: value
-end
-
 When("I check {string} under {string}") do |checkbox, section|
   within(:xpath, "//fieldset[legend[contains(text(), '#{section}')]]") do
     check checkbox
   end
-end
-
-When("I click {string}") do |button|
-  click_button button
 end
 
 Then("the equipment {string} should display {string}") do |equipment_name, text|
@@ -61,8 +49,4 @@ Then("I should see the booking cost breakdown:") do |table|
   table.rows_hash.each do |label, value|
     expect(page).to have_content("#{label}: #{value}")
   end
-end
-
-Then("I should not see {string}") do |text|
-  expect(page).to have_no_content(text)
 end

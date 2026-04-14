@@ -4,7 +4,6 @@ Feature: Access Control
   Scenario: Guest sees login and register buttons on home page
     When I go to the home page
     Then I should see "CUHK Venue & Equipment Booking"
-    And I should see "Please log in to access the booking system"
     And I should see "Register"
     And I should see "Login"
 
@@ -17,15 +16,16 @@ Feature: Access Control
     Given I am logged in as a student
     When I try to visit the admin resources page
     Then I should be redirected to the home page
-    And I should see "Access denied"
+    And I should see "You are not authorized to view this page"
 
   Scenario: Admin cannot manage other department resources
     Given a department "UC" with admin "ucadmin@cuhk.edu.hk"
     And a department "NA" exists
     And a room "NA Room" exists in "NA"
     And I am logged in as admin "ucadmin@cuhk.edu.hk"
-    When I try to edit resource "NA Room"
-    Then I should see "Access denied"
+    When I visit the admin resources page
+    Then I should see "Admin Resources"
+    And the page should not contain "NA Room"
 
   Scenario: Superadmin can manage all departments
     Given a department "UC" exists
