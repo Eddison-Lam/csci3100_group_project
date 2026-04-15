@@ -16,14 +16,7 @@ COPY . .
 
 RUN chmod +x bin/*
 
-CMD echo "=== Starting Rails in production ===" && \
-    echo "RAILS_ENV          = $RAILS_ENV" && \
-    echo "DATABASE_URL (first 80 chars) = ${DATABASE_URL:0:80}..." && \
-    echo "RAILS_MASTER_KEY exists? = $(if [ -n "$RAILS_MASTER_KEY" ]; then echo "YES"; else echo "NO"; fi)" && \
-    echo "=== Running db:migrate ===" && \
-    bundle exec rails db:migrate && \
-    echo "=== db:migrate completed successfully ===" && \
-    echo "=== Starting Sidekiq ===" && \
-    bundle exec sidekiq & \
-    echo "=== Starting Rails server on port ${PORT} ===" && \
-    bundle exec rails server -b 0.0.0.0 -p ${PORT}
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+CMD ["/usr/local/bin/entrypoint.sh"]
