@@ -11,7 +11,9 @@ WORKDIR /app
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh && \
-    sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
+    sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && \
+    echo "=== entrypoint.sh line endings fixed ===" && \
+    file /usr/local/bin/entrypoint.sh   
 
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
