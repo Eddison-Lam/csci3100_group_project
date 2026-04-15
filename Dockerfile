@@ -9,14 +9,13 @@ RUN apt-get update -qq && apt-get install -y \
 
 WORKDIR /app
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh && \
+    sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
+
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
 COPY . .
-
-RUN chmod +x bin/*
-
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
 
 CMD ["/usr/local/bin/entrypoint.sh"]
