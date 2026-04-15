@@ -23,5 +23,5 @@ CMD echo "=== Starting Rails in production ===" && \
     echo "=== db:migrate completed successfully ===" && \
     echo "=== Starting Sidekiq ===" && \
     bundle exec sidekiq & \
-    echo "=== Starting Rails server on port ${PORT} ===" && \
-    bundle exec rails server -b 0.0.0.0 -p ${PORT}
+    echo "=== Starting Rails server on port $PORT ===" && \
+    bundle exec rails server -b 0.0.0.0 -p $PORT
