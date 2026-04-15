@@ -69,7 +69,7 @@ class BookingsController < ApplicationController
           @booking.update!(status: :confirmed, paid_at: Time.current)
           @booking.update_occupied_bitmap
           @booking.clear_pending_bitmap
-          BookingMailer.confirmation_email(@booking).deliver_later
+          BookingMailer.confirmation_email(@booking).deliver_now
 
           @booking.update!(stripe_session_id: nil)
           flash[:notice] = "Payment successful! Booking confirmed."
