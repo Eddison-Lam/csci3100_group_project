@@ -3,8 +3,8 @@ default: &default
   encoding: utf8mb4
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: root
-  password: <%= ENV['DATABASE_PASSWORD'] %>
-  host: db
+  password: <%= ENV['DB_PASSWORD'] %>
+  host: <%= ENV.fetch('DATABASE_HOST', 'db') %>
   port: 3306
 
 development:
@@ -12,13 +12,8 @@ development:
   database: <%= ENV['DB_NAME'] %>
 
 test:
-  adapter: mysql2
-  encoding: utf8mb4
-  database: your_test_db_name
-  username: root
-  password: <%= ENV['DATABASE_PASSWORD'] %>  
-  host: db                      
-  port: 3306
+  <<: *default
+  database: <%= ENV.fetch('DB_NAME', 'app_db') %>
 
 production:
   <<: *default
