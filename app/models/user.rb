@@ -30,6 +30,11 @@ class User < ApplicationRecord
 
     email_down = email.downcase.strip
 
+    if email_down == "admin@cuhk.edu.hk"
+      validate_basic_email_format
+      return
+    end
+
     if email_down.ends_with?("@link.cuhk.edu.hk")
       validate_basic_email_format
       return
