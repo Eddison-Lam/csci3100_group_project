@@ -9,7 +9,10 @@ config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
 
 * text=auto eol=lf
-*.rb text eol=lf
 *.yml text eol=lf
 Dockerfile text eol=lf
 docker-compose.yml text eol=lf
+*.sh text eol=lf
+*.rb text
+*.erb text
+Gemfile text
