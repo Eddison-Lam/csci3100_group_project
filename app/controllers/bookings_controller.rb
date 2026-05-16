@@ -50,7 +50,7 @@ class BookingsController < ApplicationController
         redirect_to payment_booking_path(booking), notice: "Booking reserved. Please complete payment within 30 minutes."
       else
         # Free booking — confirmed immediately, bitmap already set by BookingService
-        BookingMailer.confirmation_email(booking).deliver_later
+        BookingMailer.confirmation_email(@booking.id).deliver_later
         redirect_to booking_path(booking), notice: "Booking confirmed!"
       end
     else
